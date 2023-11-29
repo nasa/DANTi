@@ -1,0 +1,68 @@
+<!--
+/**
+ * ## Notices
+ * Copyright 2019 United States Government as represented by the Administrator 
+ * of the National Aeronautics and Space Administration. All Rights Reserved.
+ * 
+ * ## Disclaimers
+ * No Warranty: THE SUBJECT SOFTWARE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY OF ANY KIND, 
+ * EITHER EXPRESSED, IMPLIED, OR STATUTORY, INCLUDING, BUT NOT LIMITED TO, ANY WARRANTY 
+ * THAT THE SUBJECT SOFTWARE WILL CONFORM TO SPECIFICATIONS, ANY IMPLIED WARRANTIES OF 
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR FREEDOM FROM INFRINGEMENT, 
+ * ANY WARRANTY THAT THE SUBJECT SOFTWARE WILL BE ERROR FREE, OR ANY WARRANTY THAT 
+ * DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE. THIS AGREEMENT DOES NOT, 
+ * IN ANY MANNER, CONSTITUTE AN ENDORSEMENT BY GOVERNMENT AGENCY OR ANY PRIOR RECIPIENT 
+ * OF ANY RESULTS, RESULTING DESIGNS, HARDWARE, SOFTWARE PRODUCTS OR ANY OTHER APPLICATIONS 
+ * RESULTING FROM USE OF THE SUBJECT SOFTWARE.  FURTHER, GOVERNMENT AGENCY DISCLAIMS 
+ * ALL WARRANTIES AND LIABILITIES REGARDING THIRD-PARTY SOFTWARE, IF PRESENT IN THE 
+ * ORIGINAL SOFTWARE, AND DISTRIBUTES IT "AS IS."
+ * 
+ * Waiver and Indemnity:  RECIPIENT AGREES TO WAIVE ANY AND ALL CLAIMS AGAINST THE 
+ * UNITED STATES GOVERNMENT, ITS CONTRACTORS AND SUBCONTRACTORS, AS WELL AS ANY PRIOR 
+ * RECIPIENT.  IF RECIPIENT'S USE OF THE SUBJECT SOFTWARE RESULTS IN ANY LIABILITIES, 
+ * DEMANDS, DAMAGES, EXPENSES OR LOSSES ARISING FROM SUCH USE, INCLUDING ANY DAMAGES 
+ * FROM PRODUCTS BASED ON, OR RESULTING FROM, RECIPIENT'S USE OF THE SUBJECT SOFTWARE, 
+ * RECIPIENT SHALL INDEMNIFY AND HOLD HARMLESS THE UNITED STATES GOVERNMENT, 
+ * ITS CONTRACTORS AND SUBCONTRACTORS, AS WELL AS ANY PRIOR RECIPIENT, TO THE EXTENT 
+ * PERMITTED BY LAW.  RECIPIENT'S SOLE REMEDY FOR ANY SUCH MATTER SHALL BE THE IMMEDIATE, 
+ * UNILATERAL TERMINATION OF THIS AGREEMENT.
+ */
+-->
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8"/>
+		<title>DANTi Display</title>
+		<link rel="stylesheet" href="node_modules/leaflet/dist/leaflet.css">
+		<link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+		<link rel="stylesheet" href="node_modules/font-awesome/css/font-awesome.min.css">
+		<link rel="stylesheet" href="node_modules/animate.css/animate.css">
+		<link rel="stylesheet" href="daa-displays/css/daa-displays.css">
+	</head>
+	<body style="transform-origin:top left; transform:scale(0.56); overflow:hidden; background-color:black;">
+
+		<div id="daa-theme" style="display:none; position:absolute; transform-origin: top left; transform:scale(1.7);">
+			<img src="./danti-themes/toughpad.png">
+		</div>
+		<div id="daa-disp" style="position:absolute; top:218px; left:165px; transform:scale(0.89); transform-origin:center;"></div>
+
+		<!-- files requires to run the frontend script -->
+		<script src="node_modules/leaflet/dist/leaflet.js"></script>
+		<script src="node_modules/jquery/dist/jquery.min.js"></script>
+        <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="node_modules/handlebars/dist/handlebars.min.js"></script>
+        <script src="node_modules/underscore/underscore-min.js"></script>
+        <script src="node_modules/backbone/backbone-min.js"></script>
+
+		<!-- frontend script -->
+        <script src="node_modules/requirejs/require.js" data-main="frontend.js"></script>
+        <script>
+            // this is needed by require.js because backbone modifies $ and require.js picks by default the original $ imported with <script> 
+            define('jquery', function () {
+                return $; // Just return the jQuery loaded with `script`.
+            });
+			console.log({ height: window.innerHeight, width: window.innerWidth });
+        </script>
+	</body>
+</html>

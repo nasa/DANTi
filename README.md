@@ -1,92 +1,177 @@
-# danti
+# DANTi
+<img src="screenshots/danti-cabin-logo.png" alt="DANTi" width="200"/>
+
+DANTi is an open-source display prototype for exploring the design of assistive detect-and-avoid (DAA) applications in the cockpit. 
+
+The display prototype has a split architecture with a back-end server and a front-end. The DANTi back-end can be executed on any operating system that supports [Electron](https://www.electronjs.org/) and [Java OpenJDK](https://openjdk.org/). The DANTi front-end can be executed on the same machine where the DANTi back-end is executed, as well as on remote machines and smart devices (e.g., tablets, smartphones) connected to the same TCP/IP network where the DANTi back-end is executed.
+
+The prototype can be connected to the [X-Plane flight simulator](https://www.x-plane.com/) using the [XPlane SDK](http://www.xsquawkbox.net/xpsdk/docs/DataRefs.html) and the [XPlaneConnect toolkit](https://github.com/nasa/XPlaneConnect). 
+
+<video width="800" controls>
+  <source src="screenshots/danti-loop-v2-oshkosh.mp4" type="video/mp4">
+</video>
+
+## Documentation
+- [DANTi technical report](docs/DANTi-techrep-extended.pdf): this document illustrates the design and implementation of DANTi
+- [DANTi handout](docs/DANTi-handout-2022.pdf): leaflet containing information about DANTi
+- [DANTi webpage](https://shemesh.larc.nasa.gov/fm/DANTi/): https://shemesh.larc.nasa.gov/fm/DANTi/
+
+## Requirements
+- NodeJS (v18.0.0 or greater) https://nodejs.org/en/download
+- Java Open JDK (11 or greater) https://openjdk.java.net/install
+- XPlaneConnect Toolbox ([v.1.3-RC5](https://github.com/nasa/XPlaneConnect/releases/download/v1.3-rc5/XPlaneConnect.zip), required only when connecting DANTi to X-Plane 11) https://github.com/nasa/XPlaneConnect
 
 
+## Build Instructions
+To compile DANTi from the source code:
+1. Open a terminal window and change directory to the `danti` folder
+2. Run `make` in the terminal window. This command will download the dependencies and create a folder `dist/` with the DANTi distribution
+3. Download [XPlaneConnect Toolbox v.1.3-RC5](https://github.com/nasa/XPlaneConnect/releases/download/v1.3-rc5/XPlaneConnect.zip), decompress the zip file and copy the XPlaneConnect folder to the X-Plane plugins folder ([X-Plane Directory]/Resources/plugins/). See also installation instructions at https://github.com/nasa/XPlaneConnect
 
-## Getting started
+> Note: The current version of the compilation scripts work only under MacOS and Linux. Support for compilation on Windows will be added in the near future.
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+## Launch Instruction
+To launch DANTi on a local machine:
+1. Open a command prompt at the `danti` folder 
+2. Type the following command at the command prompt
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.larc.nasa.gov/github/danti.git
-git branch -M main
-git push -uf origin main
+npm run danti
 ```
 
-## Integrate with your tools
+> Note: The above command will start the DANTi back-end server and then automatically open a window with the DANTi front-end.
 
-- [ ] [Set up project integrations](https://gitlab.larc.nasa.gov/github/danti/-/settings/integrations)
 
-## Collaborate with your team
+## Mirroring DANTi on a Tablet
+To mirror the DANTi front-end on a tablet or other smart device:
+1. Check the address of the local machine where DANTi is running (e.g., using the command `ifconfig`)
+2. Make sure the firewall settings on the local machine allows connections on port `8082`
+3. On the tablet, open a Web browser and navigate to the following address: `http://<address-of-local-machine>:8082`
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+> Note: To perform a quick test of the mirroring capabilities of DANTi, open the following link on the local machine where DANTi is executed: http://localhost:8082 The browser window will mirror the content of the DANTi display.
 
-## Test and Deploy
 
-Use the built-in continuous integration in GitLab.
+## Connecting DANTi to X-Plane
+To connect DANTi to the X-Plane flight simulator:
+1. Launch X-Plane
+> Note: Make sure you have installed the [X-Plane Connect Toolbox ver 1.3-RC5](https://github.com/nasa/XPlaneConnect/releases/download/v1.3-rc5/XPlaneConnect.zip) in X-Plane, see installation instructions on [github](https://github.com/nasa/XPlaneConnect#quick-start). 
+2. Launch DANTi
+3. Open a command prompt at the `danti` folder and type the following command to link X-Plane to DANTi.
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+```
+npm run connect-xplane2danti
+```
+> Note: Keep the terminal open, otherwise the connection will be terminated.
 
-***
+## Playback of Recorded Flight Scenarios
+Utility functions are provided to support playback of recorded flight scenarios in `.daa` format:
 
-# Editing this README
+### Replay in DANTi
+To replay flight scenario in DANTi:
+1. Open a command prompt at the `danti` folder and type the following command
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
+  ```
+  npm run stream-scenario2danti -- Centennial_N416DJ_own_short.daa
+  ```
+ 
+> Note: Keep the command prompt open. This command will replay scenario `Centenial_N416DJ_own_short.daa`. Example scenarios are in folder `dist/daa-scenarios` and the replay script uses that folder as base folder when trying to load scenarios indicated at the command line.
 
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+### Replay in X-Plane + DANTi
+To replay a flight scenario in X-Plane + DANTi:
+1. Launch X-Plane, start a new flight, and pause the simulation
+> Note: Pausing the simulation is necessary to avoid the X-Plane engine to interfere with the commands we will send to replay the flight scenario
+2. Open a command prompt at the `danti` folder and type the following command
+  
+  ```
+  npm run stream-scenario2xplane
+  ```
 
-## Name
-Choose a self-explaining name for your project.
+> Note: Keep the command prompt open. This command will replay scenario `Centennial_N416DJ_own_m_short.daa`. The list of available scenarios are in folder `dist/daa-scenarios`. To replay a different scenario, pass the scenario name as a command line argument to the npm script using the `--` separator. For example, the replay `scenario-6.daa`, use the command `npm run stream-scenario2xplane -- scenario-6.daa`
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+## Notes for Developers
+The [docs](./docs/) folder includes useful documentation, including technical reports on the design and architecture of DANTi. Additionally, the DANTi distribution includes a series of convenient npm scripts and bash scripts for launching DANTi, activating the connection with X-Plane, and creating streaming services for sending scenario data to DANTi and/or X-Plane. The npm scripts are stored in `package.json` in section `scripts`.
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+### DANTi connection examples
+- [stream-scenario2danti.ts](./src/danti-connect/stream-scenario2danti.ts): This example demonstrates how to use the `DantiConnection` class to send data and control commands to DANTi using a WebSocket connection.
+- [stream-scenario2xplane.ts](./src/danti-connect/stream-scenario2xplane.ts): This example demonstrates how to use the `DantiConnection` class to playback a scenario in X-Plane using a WebSocket connection and XPlane-Connect (XPC) Toolbox. The maximum number of traffic aircraft is 20, this limit is imposed by the XPC Toolbox. The full list of parameters and commands that can be sent to X-Plane with XPC is documented at http://www.xsquawkbox.net/xpsdk/docs/DataRefs.html
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+### Useful Bash scripts
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+- [danti.sh](./danti.sh): use this script to launch an instance of the DANTi display.
+    - To resize the display, use `Ctrl+`/`Ctrl-` (Linux) and `Command+`/`Command-` (MacOS).
+    - An option `frameless` that can be used to render the display without a window frame. When rendered without the window frame, use the resize corners to move the position of the display. 
+- [connect-xplane2danti.sh](./connect-xplane2danti.sh): connects a running instance of X-Plane with a running instance of DANTi. This script is to be used during live simulations where a user controls the aircraft with a joystick.
+- [stream-scenario2xplane.sh](./stream-scenario2xplane.sh): reads a .daa scenario file and streams the scenario to a running instance of X-Plane. Note that X-Plane should be put in pause, otherwise the physics simulator may override the flight data sent with the script.
+    - A `.daa` scenario file can be specified as parameter. All scenarios are in [dist/daa-scenarios](dist/daa-scenarios). The default scenario streamed by the script is `Centennial_N416DJ_own_maneuver.daa`.
+    - Mnemonic names can be used to specify a `.daa` scenario: `centennial` corresponds to `Centennial_N416DJ_own_m.daa`, `centennial-accident` corresponds to `Centennial_N416DJ_own_maneuver.daa`, and `centennial-accident-short` corresponds to `Centennial_N416DJ_own_m-short.daa`. These mnemonic names are defined in `config.ts`. 
+    - The default interval used for sending scenario data to X-Plane is 1 second. This value can be changed using the option `speed n` where `n` is a multiplier that accelerates/decelerates the playback interval. For example `speed 2` accelerates playback by a factor of 2 (i.e., the interval will be 500ms), `speed 0.5` decelerates playback (the interval will be 2s). Increasing the simulation speed can be used for fast-time simulations. Reducing the speed is useful for running simulations on slower machines that are unable to keep up with rendering.
+    - An option `animate` can be used to create a smoother playback. The option automatically introduces additional states in the original .daa file by interpolating the position and heading of the aircraft.
+    - Flight data sent to X-Plane can be forwarded automatically to a running instance of DANTi with the `connect-xplane2danti-replay.sh` script.
+- [stream-scenario2danti.sh](./stream-scenario2danti.sh): reads a .daa scenario file and streams the scenario directly to the DANTi display. The script supports the same options of `stream-scenario2xplane.sh`. Additionally, an option `loop` can be used to loop the scenario forever.
+- [stream-scenario2danti-loop.sh](./stream-scenario2danti-loop.sh): alternative version of `stream-scenario2danti.sh`, loops the scenario forever. Equivalent to `stream-scenario2danti.sh loop`
+- [test-xplane-connection.sh](./test-xplane-connection.sh): test script for the connection with X-Plane. The test executed with the script disables the physics engine of X-Plane, moves the location of the ownship and 2 other aircraft to an airport in Seattle, and sets the heading/altitude of the aircraft. The modules for the integration with X-Plane are implemented in Java and build on the XPlaneConnect toolbox. For additional details, see source code at [src/danti-connect/xplane](src/danti-connect/xplane).
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+## Structure
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+```
+.
+├── src
+│   ├── danti-app                                // DANTi application
+│   │     ├── danti-display.ts                   // Front-end
+│   │     ├── danti-server.ts                    // Back-end
+│   │     ├── danti-worker.ts                    // Process worker for computing maneuver guidance
+│   │     └── danti-interface.ts                 // APIs declaration
+│   │
+│   ├── danti-utils                              // Utility functions for computing maneuver guidance
+│   │     ├── DAABandsREPLV2.java                // Read-Eval-Print loop for computing maneuver guidance in real time
+│   │     ├── DAABandsV2.java                    // Core functions for computing maneuver guidance with DAIDALUS
+│   │     ├── DAA2Json.java                      // Converts DAIDALUS results into JSON format
+│   │     └── DAAMonitorsV1.java                 // Run time monitors
+│   │
+│   ├── danti-connect                            // Communication function for connecting to DANTi
+│   │     ├── danti-connection.ts                // Utility functions for connecting a generic data source to DANTi
+│   │     ├── connect-xplane2danti.ts            // Utility functions for connecting X-Plane to DANTi
+│   │     ├── flight-plan.ts                     // Utility functions for sending a flight plan to DANTi
+│   │     ├── send-config.ts                     // Utility functions for sending a configuration file to DANTi
+│   │     ├── stream-scenario2danti.ts           // Utility functions for sending pre-recorded flight data to DANTi
+│   │     ├── stream-scenario2xplane.ts          // Utility functions for sending pre-recorded flight data to X-Plane
+│   │     └── xplane
+│   │           ├── xplane-connection.ts         // Core function for conneting X-Plane to DANTi
+│   │           └── src
+│   │                 ├── XPlaneConnection.java  // Interface to the XPC ToolBox
+│   │                 └── XPC                    // XPC ToolBox (X-Plane Communication Toolbox)
+│   ├── daa-displays                             // DAA-Displays widgets library
+│   ├── danti-themes                             // Visual styles for the DANTi front-end
+│   ├── daa-scenarios                            // Example flight scenarios, useful for DANTi demos
+│   ├── filters.ts                               // Configurable traffic filters
+│   ├── config.ts                                // DANTi configuration parameters
+│   ├── backend.ts                               // Electron back-end
+│   ├── frontend.ts                              // Electron front-end
+│   ├── main.ts                                  // Electron main app
+│   └── index.html                               // Baseline visual style for the DANTi front-end
+├── dist                                         // DANTi distribution, generated from `src` using the Makefile 
+├── danti.sh                                     // Script for launching DANTi
+├── Makefile                                     // Compilation targets
+└── package.json                                 // Manifest file and scripts
+```
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+## Notices
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+### Copyright
+Copyright 2023 United States Government as represented by the Administrator of the National Aeronautics and Space Administration. All Rights Reserved..
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+### Third Party Software:
+Third-Party Software: See Appendix_A_LAR-20393-1 (Attached)
 
-## License
-For open source projects, say how it is licensed.
+### Disclaimers
+No Warranty: THE SUBJECT SOFTWARE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY OF ANY KIND, EITHER EXPRESSED, IMPLIED, OR STATUTORY, INCLUDING, BUT NOT LIMITED TO, ANY WARRANTY THAT THE SUBJECT SOFTWARE WILL CONFORM TO SPECIFICATIONS, ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR FREEDOM FROM INFRINGEMENT, ANY WARRANTY THAT THE SUBJECT SOFTWARE WILL BE ERROR FREE, OR ANY WARRANTY THAT DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE. THIS AGREEMENT DOES NOT, IN ANY MANNER, CONSTITUTE AN ENDORSEMENT BY GOVERNMENT AGENCY OR ANY PRIOR RECIPIENT OF ANY RESULTS, RESULTING DESIGNS, HARDWARE, SOFTWARE PRODUCTS OR ANY OTHER APPLICATIONS RESULTING FROM USE OF THE SUBJECT SOFTWARE.  FURTHER, GOVERNMENT AGENCY DISCLAIMS ALL WARRANTIES AND LIABILITIES REGARDING THIRD-PARTY SOFTWARE, IF PRESENT IN THE ORIGINAL SOFTWARE, AND DISTRIBUTES IT "AS IS."
+ 
+Waiver and Indemnity:  RECIPIENT AGREES TO WAIVE ANY AND ALL CLAIMS AGAINST THE UNITED STATES GOVERNMENT, ITS CONTRACTORS AND SUBCONTRACTORS, AS WELL AS ANY PRIOR RECIPIENT.  IF RECIPIENT'S USE OF THE SUBJECT SOFTWARE RESULTS IN ANY LIABILITIES, DEMANDS, DAMAGES, EXPENSES OR LOSSES ARISING FROM SUCH USE, INCLUDING ANY DAMAGES FROM PRODUCTS BASED ON, OR RESULTING FROM, RECIPIENT'S USE OF THE SUBJECT SOFTWARE, RECIPIENT SHALL INDEMNIFY AND HOLD HARMLESS THE UNITED STATES GOVERNMENT, ITS CONTRACTORS AND SUBCONTRACTORS, AS WELL AS ANY PRIOR RECIPIENT, TO THE EXTENT PERMITTED BY LAW.  RECIPIENT'S SOLE REMEDY FOR ANY SUCH MATTER SHALL BE THE IMMEDIATE, UNILATERAL TERMINATION OF THIS AGREEMENT.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+## Contacts
+Maria Consiglio (NASA LaRC) (maria.c.consiglio@nasa.gov)
+Paolo Masci (AMA-NASA LaRC) (paolo.masci@ama-inc.com)
+Cesar Munoz (NASA LaRC) (cesar.a.munoz@nasa.gov)
