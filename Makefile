@@ -190,10 +190,10 @@ copy-repl-modules:
 	@if [ ! -e "src/danti-utils/lib" ]; then \
 		cd src/danti-utils && ln -s ../../$(submodules)/daa-displays/daidalus-submodules/v$(DAIDALUS_VERSION)/Java/lib/ lib; \
 	fi
-	cp $(submodules)/daa-displays/src/daa-logic/utils/DAABandsV2.java src/danti-utils
-	cp $(submodules)/daa-displays/src/daa-logic/utils/DAAMonitorsV2.java src/danti-utils
-	cp $(submodules)/daa-displays/src/daa-logic/utils/DAA2Json.java src/danti-utils
-	cp $(submodules)/daa-displays/src/daa-logic/utils/DAAProfiler.java src/danti-utils
+	rsync $(submodules)/daa-displays/src/daa-logic/utils/DAABandsV2.java src/danti-utils
+	rsync $(submodules)/daa-displays/src/daa-logic/utils/DAAMonitorsV2.java src/danti-utils
+	rsync $(submodules)/daa-displays/src/daa-logic/utils/DAA2Json.java src/danti-utils
+	rsync $(submodules)/daa-displays/src/daa-logic/utils/DAAProfiler.java src/danti-utils
 	cd src/danti-utils && javac -cp ./:./lib/$(DAIDALUS_JAR) DAABandsREPLV2.java && cd ../../../
 	@echo -e "\033[0;32m** Done with making DAIDALUS REPL modules! **\033[0m"
 	@echo -e "\033[0;32m** Use\033[0m make repl\033[0;32m to launch DAIDALUS REPL\033[0m"

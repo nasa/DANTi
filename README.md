@@ -1,4 +1,3 @@
-# DANTi
 <img src="screenshots/danti-cabin-logo.png" alt="DANTi" width="200"/>
 
 DANTi is an open-source display prototype for exploring the design of assistive detect-and-avoid (DAA) applications in the cockpit. 
