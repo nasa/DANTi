@@ -82,7 +82,7 @@ daa-displays:
 	git submodule update --init --remote
 	@echo -e "\033[0;32m** Done with cloning daa-displays! **\033[0m"
 	@echo -e "\033[0;32m** Building daa-displays **\033[0m"
-	@cd $(submodules)/daa-displays && make -e daidalus-releases=v$(DAIDALUS_VERSION)
+	@cd $(submodules)/daa-displays && make -e daidalus-releases=v$(DAIDALUS_VERSION) -e only-danti=y
 	@echo -e "\033[0;32m** Done with making daa-display! **\033[0m"
 	# copying files and folders to dist
 	@if [ ! -e "dist" ]; then \
