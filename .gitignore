@@ -1,2 +1,6 @@
 .DS_Store
 .vscode
+*.class
+dist/
+node_modules/
+src/danti-connect/xplane/dist/

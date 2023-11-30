@@ -3,6 +3,8 @@
 
 DANTi is an open-source display prototype for exploring the design of assistive detect-and-avoid (DAA) applications in the cockpit. 
 
+> Note: In an effort to track usage and maintain accurate records of the use of  DANTi, each recipient, upon cloning or downloading the software, is requested to provide NASA, by e-mail to Maria Consiglio (maria.c.consiglio@nasa.gov), the following information: First and Last Name; Email Address; and Affiliation. Recipient’s name and personal information shall be used for statistical purposes only.
+
 The display prototype has a split architecture with a back-end server and a front-end. The DANTi back-end can be executed on any operating system that supports [Electron](https://www.electronjs.org/) and [Java OpenJDK](https://openjdk.org/). The DANTi front-end can be executed on the same machine where the DANTi back-end is executed, as well as on remote machines and smart devices (e.g., tablets, smartphones) connected to the same TCP/IP network where the DANTi back-end is executed.
 
 The prototype can be connected to the [X-Plane flight simulator](https://www.x-plane.com/) using the [XPlane SDK](http://www.xsquawkbox.net/xpsdk/docs/DataRefs.html) and the [XPlaneConnect toolkit](https://github.com/nasa/XPlaneConnect). 

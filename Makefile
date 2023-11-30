@@ -2,7 +2,7 @@ SHELL=/bin/bash
 
 address="0.0.0.0"
 submodules=submodules
-DAIDALUS_VERSION=2.0.3
+DAIDALUS_VERSION=2.0.4
 DAIDALUS_JAR:=DAIDALUSv$(DAIDALUS_VERSION).jar
 
 all:
@@ -82,10 +82,9 @@ daa-displays:
 	git submodule update --init --remote
 	@echo -e "\033[0;32m** Done with cloning daa-displays! **\033[0m"
 	@echo -e "\033[0;32m** Building daa-displays **\033[0m"
-	@cd $(submodules)/daa-displays && make
+	@cd $(submodules)/daa-displays && make -e daidalus-releases=v$(DAIDALUS_VERSION)
 	@echo -e "\033[0;32m** Done with making daa-display! **\033[0m"
 	# copying files and folders to dist
-	cd src/daa-logic && make
 	@if [ ! -e "dist" ]; then \
 		mkdir dist; \
 	fi
@@ -106,7 +105,7 @@ daa-displays:
 	-rm dist/daa-config/2.x/CD3D.conf
 	-rm dist/daa-config/2.x/TCAS3D.conf
 	-rm dist/daa-config/2.x/DO_*.conf
-	@echo -e "\033[0;32m** Done with compiling daa-displays! **\033[0m"
+	@echo -e "\033[0;32m** Done with daa-displays! **\033[0m"
 
 copy:
 	# creating directory structure
