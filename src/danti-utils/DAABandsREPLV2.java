@@ -1067,10 +1067,65 @@ public class DAABandsREPLV2 extends DAABandsV2 {
 	}
 
 	/**
+	 * Utility function, parses CLI arguments
+	 */
+	public DAABandsREPLV2 parseCliArgs (String[] args) {
+		if (args != null && args.length == 0) {
+			printHelpMsg();
+			System.exit(0);
+		}
+		for (int a = 0; a < args.length; a++) {
+			if (args[a].equals("--help") || args[a].equals("-help") || args[a].equals("-h")) {
+				printHelpMsg();
+				System.exit(0);
+			} else if (args[a].startsWith("--list-monitors") || args[a].startsWith("-list-monitors")) {
+				System.out.println(printMonitorList());
+				System.exit(0);
+			} else if (args[a].startsWith("--list-alerters") || args[a].startsWith("-list-alerters")) {
+				// list alerters for a given configuration
+				if ((a + 1) < args.length) { daaConfig = args[++a]; }
+				loadConfig();
+				System.out.println(printAlerters());
+				System.exit(0);
+			} else if (args[a].startsWith("--version") || args[a].startsWith("-version")) {
+				System.out.println(getVersion());
+				System.exit(0);
+			} else if (a < args.length - 1 && (args[a].startsWith("--prec") || args[a].startsWith("-prec") || args[a].equals("-p"))) {
+				if (a + 1 < args.length) { precision = Integer.parseInt(args[++a]); }
+			} else if (a < args.length - 1 && (args[a].startsWith("--conf") || args[a].startsWith("-conf") || args[a].equals("-c"))) {
+				if (a + 1 < args.length) {
+					daaConfigFile = args[++a]; 
+					daaConfig = Paths.get(configFolder + "/" + daaConfigFile).toAbsolutePath().toString(); 
+				}
+			} else if (a < args.length - 1 && (args[a].startsWith("--alerter") || args[a].startsWith("-alerter") || args[a].equals("-a"))) {
+				if (a + 1 < args.length) { daaAlerter = args[++a]; }
+			} else if (a < args.length - 1 && (args[a].startsWith("--out") || args[a].startsWith("-out") || args[a].equals("-o"))) {
+				if (a + 1 < args.length) { ofname = args[++a]; }
+			} else if (a < args.length - 1 && (args[a].startsWith("--ownship") || args[a].startsWith("-ownship"))) {
+				if (a + 1 < args.length) { ownshipName = args[++a]; }
+			} else if (a < args.length - 1 && (args[a].startsWith("--wind") || args[a].startsWith("-wind"))) {
+				if (a + 1 < args.length) { wind = args[++a]; }
+			} else if (a < args.length - 1 && (args[a].startsWith("--profiler-on") || args[a].startsWith("-profiler-on"))) {
+				PROFILER_ENABLED = true;
+			} else if (args[a].startsWith("-")) {
+				System.err.println("** Warning: Invalid option (" + args[a] + ")");
+			} else {
+				ifname = args[a];
+			}
+		}
+		scenario = removeExtension(getFileName(ifname));
+		if (ofname == null) {
+			ofname = scenario + ".json";
+		}
+		return this;
+	}
+
+	/**
 	 * main entry point
 	 */
 	public static void main(String[] args) {
 		DAABandsREPLV2 repl = new DAABandsREPLV2();
+		repl.parseCliArgs(args);
 		repl.loadConfig();
 		repl.printSettings();
 		repl.start();

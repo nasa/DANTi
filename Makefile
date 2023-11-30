@@ -147,6 +147,8 @@ dist: tsc-nocopy
 	# building jar file DAABandsREPLV2.jar
 	make copy-repl-modules
 	cp src/danti-utils/*.class dist/danti-utils
+	# selecting library $(DAIDALUS_JAR) for the manifest file
+	cd src/danti-utils && printf "Main-Class: DAABandsREPLV2\nClass-Path: lib/$(DAIDALUS_JAR)\n" > MANIFEST.MF
 	cp src/danti-utils/MANIFEST.MF dist/danti-utils
 	cd dist/danti-utils && jar -cfm DAABandsREPLV2.jar ./MANIFEST.MF *.class && rm *.class && cd ../../..
 	@touch dist/daa-output/REPL.json

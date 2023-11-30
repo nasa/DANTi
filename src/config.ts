@@ -75,7 +75,10 @@ export const UPDATE_HEADING_AT_LOW_SPEEDS: boolean = false;
 // whether DANTi should be terminated upon disconnection of client or data source
 export const TERMINATE_ON_DISCONNECT: boolean = true;
 
-// whether the special daa configutaion SL3 should be used -- when using this configuration, DANTi suppresses warning alerts for altitudes below THRESHOLD_ALT_SL3
+// DAA configuration, stored in daa-config/2.x
+export const DAA_CONFIG: string = "DANTi_SL3.conf"; // DWC_SL3 300ft x 0.3nmi
+
+// whether the special daa setting "SL3" should be used -- when using this configuration, DANTi suppresses warning alerts for altitudes below THRESHOLD_ALT_SL3
 export const USE_TCAS_SL3: boolean = true;
 // altitude threshold below which we suppress warning alerts
 // TODO: the altitude threshold should not be absolute altitude but above ground level (AGL) altitude

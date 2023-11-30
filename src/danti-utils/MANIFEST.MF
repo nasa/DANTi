@@ -1,2 +1,2 @@
 Main-Class: DAABandsREPLV2
-Class-Path: lib/DAIDALUSv2.0.3.jar
+Class-Path: lib/DAIDALUSv2.0.4.jar

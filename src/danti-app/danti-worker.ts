@@ -31,6 +31,7 @@ import { ChildProcess, spawn } from "child_process";
 import path = require("path");
 import { DantiWorkerInterface } from "./danti-interface";
 import * as fsUtils from '../daa-server/utils/fsUtils';
+import { DAA_CONFIG } from "../config";
 import * as os from 'os';
 
 /**
@@ -74,9 +75,12 @@ export class DantiWorker implements DantiWorkerInterface {
         return new Promise ((resolve) => {
             this.log("[danti-worker] Booting up bands worker...");
             const dir: string = path.join(__dirname, "../danti-utils"); // folder containing DAABandsREPLV2
+            const daaConfig: string = DAA_CONFIG;
+            this.log(`[danti-worker] Selecting DAA configuration ${daaConfig}`);
             const args: string[] = [
-                "-jar", path.join(dir, "DAABandsREPLV2.jar")
+                "-jar", path.join(dir, "DAABandsREPLV2.jar"), "-conf", daaConfig
             ];
+            this.log(`[danti-worker] Spawning java ${args.join(" ")}`);
             this.worker = spawn("java", args);
             this.worker.stdout.setEncoding("utf8");
             this.worker.stderr.setEncoding("utf8");
