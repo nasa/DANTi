@@ -37,7 +37,7 @@ export type ScreenType = "21:9" | "ultra-widescreen" | "16:9" | "widescreen" | "
  */
 
 // default DANTi address and port
-export const DANTI_ADDRESS: string = "localhost"; // default is localhost
+export const DANTI_ADDRESS: string = "0.0.0.0"; // default is localhost
 export const DANTI_PORT: number = 8082;
 
 // whether danti-app should use https to connect to the server (this is not necessary when using localhost)
