@@ -219,6 +219,10 @@ stream-scenario2xplane:
 stream-scenario2xplane-loop:
 	node dist/danti-connect/stream-scenario2xplane.js $(file) -loop
 
+# run danti
+run-danti:
+	npm run danti
+
 # examples:
 #   make connect-testbed2danti
 connect-testbed2danti:
