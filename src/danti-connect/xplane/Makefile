@@ -1,4 +1,4 @@
-DAIDALUS_VERSION=2.0.2
+DAIDALUS_VERSION=2.0.4
 DAIDALUS_JAR:=DAIDALUSv$(DAIDALUS_VERSION).jar
 
 all: xpc xplane-connection
@@ -9,7 +9,10 @@ test-xplane:
 xplane-connection:
 	cp ../../danti-utils/lib/$(DAIDALUS_JAR) dist
 	javac -cp dist/XPC-1.3.RC5.jar:../../danti-utils/lib/$(DAIDALUS_JAR) src/*.java
+	# selecting library $(DAIDALUS_JAR) for the manifest file
+	cd src && printf "Main-Class: XPlaneConnection\nClass-Path: XPC-1.3.RC5.jar $(DAIDALUS_JAR)\n" > MANIFEST.MF
 	cd src && jar -cmfv MANIFEST.mf XPlaneConnection.jar *.class
+	cd src && printf "Main-Class: XPlaneConnection\nClass-Path: XPC-1.3.RC5.jar $(DAIDALUS_JAR)\n" > MANIFEST-REPLAY.MF
 	cd src && jar -cmfv MANIFEST-REPLAY.mf XPlaneConnectionReplay.jar *.class
 	mv src/*.jar dist/
 	@make remove-xplane-connection-class-files

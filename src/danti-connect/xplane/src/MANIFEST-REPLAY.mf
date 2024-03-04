@@ -1,3 +1,2 @@
-Manifest-Version: 1.0
-Main-Class: XPlaneConnectionReplay
-Class-Path: XPC-1.3.RC5.jar DAIDALUSv2.0.3.jar
+Main-Class: XPlaneConnection
+Class-Path: XPC-1.3.RC5.jar DAIDALUSv2.0.4.jar
