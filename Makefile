@@ -211,13 +211,19 @@ stream-scenario2danti:
 	node dist/danti-connect/stream-scenario2danti.js $(file)
 
 stream-scenario2danti-loop:
-	node dist/danti-connect/stream-scenario2danti.js $(file) -loop
+	node dist/danti-connect/stream-scenario2danti.js $(file) -- loop
+
+stream-scenario2danti-la:
+	node dist/danti-connect/stream-scenario2danti.js $(file) -- loop animate speed 8
 
 stream-scenario2xplane:
 	node dist/danti-connect/stream-scenario2xplane.js $(file)
 
 stream-scenario2xplane-loop:
-	node dist/danti-connect/stream-scenario2xplane.js $(file) -loop
+	node dist/danti-connect/stream-scenario2xplane.js $(file) -- loop
+
+stream-scenario2xplane-la:
+	node dist/danti-connect/stream-scenario2xplane.js $(file) -- loop animate speed 8
 
 # run danti
 run-danti:
