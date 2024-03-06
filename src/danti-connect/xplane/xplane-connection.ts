@@ -112,14 +112,14 @@ export class XPlaneConnection {
         return ans ? JSON.parse(ans) : {};
     }
     /**
-     * prints aircraft data in the danti format.
-     * An example data in the danti format is as follows
+     * prints aircraft data in the daa format.
+     * An example data in the daa format is as follows
      * N416DJ, 39.618208672764, -104.89621335902606, 7016.67, 33.00, 148.00, -500.00, 63
      * where the columns are:
      * NAME     lat          lon           alt          trk         gs           vs         time
      * [none]   [deg]        [deg]         [ft]         [deg]       [knot]       [fpm]      [s]
      */
-    printDantiAircraft (data: XPlaneData, ac: number, opt?: { useClock?: boolean, useMillis?: boolean }): string {
+    printDaaAircraft (data: XPlaneData, ac: number, opt?: { useClock?: boolean, useMillis?: boolean }): string {
         const ac_index: number = ac === 0 ? 0 : ac - 1;
         const aircraft: XPlaneAircraft = ac === 0 ? 
             data?.ownship 
@@ -148,18 +148,18 @@ export class XPlaneConnection {
     }
     /**
      * extracts traffic data from the given xplane data
-     * traffic data is formatted in the danti format.
-     * An example data in the danti format is as follows
+     * traffic data is formatted in the daa format.
+     * An example data in the daa format is as follows
      * N416DJ, 39.618208672764, -104.89621335902606, 7016.67, 33.00, 148.00, -500.00, 63
      * where the columns are:
      * NAME     lat          lon           alt          trk         gs           vs         time
      * [none]   [deg]        [deg]         [ft]         [deg]       [knot]       [fpm]      [s]
      */
-    printDantiTraffic (data: XPlaneData, opt?: { useClock?: boolean, useMillis?: boolean }): string[] {
+    printDaaTraffic (data: XPlaneData, opt?: { useClock?: boolean, useMillis?: boolean }): string[] {
         const traffic: XPlaneAircraft[] = data.traffic;
         const ans: string[] = [];
         for (let i = 0; i < traffic?.length; i++) {
-            const acData: string = this.printDantiAircraft(data, i + 1, opt);
+            const acData: string = this.printDaaAircraft(data, i + 1, opt);
             ans.push(acData);
         }
         return ans;

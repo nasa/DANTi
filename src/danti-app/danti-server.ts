@@ -33,7 +33,11 @@ import * as path from 'path';
 import * as http from 'http';
 import * as https from 'https';
 import { AddressInfo } from 'net';
-import { LabelsRequest, DantiRequest, RegisterResponse, RenderRequest, TrafficDataRequest, UnitsRequest, OwnshipNameRequest, ConfigRequest, FlightPlanRequest, SetFlightPlanRequest, OwnshipDataRequest } from './danti-interface';
+import { 
+	LabelsRequest, DantiRequest, RegisterResponse, RenderRequest, TrafficDataRequest, 
+	UnitsRequest, OwnshipNameRequest, ConfigRequest, FlightPlanRequest, 
+	SetFlightPlanRequest, OwnshipDataRequest, AvionicsData, AvionicsDataRequest 
+} from './danti-interface';
 import { DantiData } from './danti-display';
 // import * as fs from 'fs';
 import { DantiWorker } from './danti-worker';
@@ -72,9 +76,14 @@ export class DantiServer {
 	protected units: string;
 
 	/**
-	 * last received ownship data, useful to keep it to apply filter to traffic
+	 * last received ownship data, useful to filter out traffic that is, e.g., far away
 	 */
 	protected ownship: OwnshipDataRequest;
+
+	/**
+	 * Avionics data from the ownship
+	 */
+	protected avionics: AvionicsData;
 	
 	/**
 	 * Debug flag
@@ -312,6 +321,15 @@ export class DantiServer {
 							}
 							break;							
 						}
+						case "avionics": {
+							// stores avionics data
+							const data: AvionicsData = (<AvionicsDataRequest> req).data;
+							if (data) {
+								this.log("[danti-server] Received avionics data", { avionics: data });
+								this.avionics = data;
+							}
+							break;
+						}
 						case "labels": {
 							// send labels to worker
 							const data: string = (<LabelsRequest> req).data;
@@ -376,9 +394,11 @@ export class DantiServer {
 									const desc: ScenarioDescriptor = JSON.parse(data.bands);
 									const bands: ScenarioDataPoint = this.getFirstDataPoint(desc);
 									const scenario: DAAScenario = JSON.parse(data.lla);
+									const avionics: AvionicsData = this.avionics;
 									const flightData: FlightData = scenario.lla[scenario.steps[0]];
 									const dantiData: DantiData = {
-										flightData, 
+										avionics,
+										flightData,
 										bands
 									};
 									const endTime_decodeResults: number = Date.now();

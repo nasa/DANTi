@@ -37,7 +37,7 @@ export declare type DantiRequestType =
     "register-danti" | "register-virtual-pilot" | "render-request" 
     | "traffic" | "ownship" | "ownship-name" | "flight-plan"
     | "labels" | "units" | "wind" | "config" 
-    | "epoch-end" | "reset";
+    | "epoch-end" | "reset" | "avionics";
 export declare interface DantiRequest {
     id: string, // unique message id
     type: DantiRequestType,
@@ -51,7 +51,7 @@ export declare interface DantiResponse {
 
 export declare type DantiStreamerRequest = RegisterRequest | RenderRequest | TrafficDataRequest
     | OwnshipDataRequest | LabelsRequest | UnitsRequest | WindRequest | OwnshipNameRequest
-    | EpochEndNotification | ConfigRequest | FlightPlanRequest | ResetRequest;
+    | EpochEndNotification | ConfigRequest | FlightPlanRequest | ResetRequest | AvionicsDataRequest;
 
 export declare interface RegisterRequest extends DantiRequest {
     type: "register-danti" // message type
@@ -91,6 +91,14 @@ export declare interface OwnshipDataRequest extends DantiRequest {
     data: string
 }
 export declare interface OwnshipDataResponse {
+    success: boolean
+}
+
+export declare interface AvionicsDataRequest extends DantiRequest {
+    type: "avionics",
+    data: AvionicsData
+}
+export declare interface AvionicsDataResponse {
     success: boolean
 }
 
@@ -189,6 +197,36 @@ export declare interface DantiWorkerInterface {
      */
     wind (data: string): Promise<string>;
 }
+/**
+ * Traffic data, e.g., received from the ADS-B
+ */
+export interface TrafficData {
+    name: string, // tail number
+    lat: { val: string, units: string }, // latitude
+    lon: { val: string, units: string }, // longitude
+    alt: { val: string, units: string }, // altitude
+    track: { val: string, units: string }, // true track
+    heading?: { val: string, units: string }, // true heading
+    gs: { val: string, units: string }, // true ground speed
+    vspeed: { val: string, units: string }, // vertical speed
+    wow: { val: string, units: string }, // weight on wheels
+    time?: string, // current time
+    toa: { val: string, units: string } // time of applicability
+    error?: string // true indicates that an error occurred while reading the aircraft state
+}
+/**
+ * Data received from the avionics of the ownship
+ */
+export interface AvionicsData extends TrafficData {
+    magheading: { val: string, units: string }, // magnetic heading
+    magvar: { val: string, units: string }, // magnetic variation
+    ias: { val: string, units: string }, // indicated airspeed
+    tas: { val: string, units: string } // true airspeed
+}
+export type AircraftData = AvionicsData | TrafficData;
+/**
+ * Utility function, generated a unique id
+ */
 export function uuid (format?: string) {
     let d: number = new Date().getTime();
     format = format || 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';

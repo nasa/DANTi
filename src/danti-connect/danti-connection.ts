@@ -42,7 +42,9 @@ import {
     WindRequest,
     ConfigRequest,
     FlightPlanRequest,
-    ResetRequest
+    ResetRequest,
+    AvionicsDataRequest,
+    AvionicsData
 } from '../danti-app/danti-interface';
 
 function get_unique_id (format?: string) {
@@ -204,6 +206,17 @@ export class DantiConnection implements DantiDataSourceInterface {
         }
         return false;
     }
+    /**
+     * Sends data received from the ownship avionics to danti-server
+     */
+    async sendAvionicsData (data: AvionicsData): Promise<boolean> {
+        if (data) {
+            const req: AvionicsDataRequest = { id: get_unique_id(), type: "avionics", data };
+            return await this.sendData(req);
+        }
+        return false;
+    }
+
     /**
      * Sends daa labels to danti-server
      */

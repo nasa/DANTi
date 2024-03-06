@@ -65,7 +65,7 @@ import gov.nasa.larcfm.Util.f;
 class DaaStreamReader extends StateReader {
 
 	// whether dbg messages are printed
-	protected boolean dbg_enabled = true;
+	protected boolean dbg_enabled = false;
 
 	// ownship name (if null, then the first traffic aircraft is considered the ownship
 	protected String ownshipName;
@@ -636,6 +636,11 @@ public class DAABandsREPLV2 extends DAABandsV2 {
 		daaConfig = Paths.get(configFolder + "/" + daaConfigFile).toAbsolutePath().toString();
 		this.log("Setting config folder: " + configFolder);
 	}
+	void setConfigFile (String file) {
+		daaConfigFile = file;
+		daaConfig = Paths.get(configFolder + "/" + daaConfigFile).toAbsolutePath().toString();
+		this.log("Setting config folder: " + configFolder);
+	}
 	boolean setStaleThreshold (double th) {
 		if (th >= 0) {
 			staleThreshold = th;
@@ -1049,6 +1054,39 @@ public class DAABandsREPLV2 extends DAABandsV2 {
 		}
     }
 	/**
+	 * Returns true if the command line is a command
+	 */
+	protected boolean isCliArg (String[] cmd, String line) {
+		if (line != null) {
+			String ln = line.trim();
+			for (int i = 0; i < cmd.length; i++) {
+				if (ln.equalsIgnoreCase(cmd[i])) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	/**
+	 * @Override
+	 * Parse command line arguments
+	 */
+	public DAABandsREPLV2 parseCliArgs (String[] args) {
+		if (args != null && args.length > 0) {
+			log("[DAABandsREPLV2] Parsing CLI args...");
+			for (int a = 0; a < args.length; a++) {
+				log("args[" + a + "] = " + args[a]);
+				if (isCliArg(cmd_config, args[a])) {
+					if (a + 1 < args.length) { setConfigFile(args[++a]); }
+				} else if (isCliArg(cmd_config_folder, args[a])) {
+					if (a + 1 < args.length) { setConfigFolder(args[++a]); }
+				}
+			}
+		}
+		return this;
+	}
+	/**
+	 * @override
 	 * Prints the help message
 	 */
 	public void printHelpMsg() {
@@ -1058,66 +1096,12 @@ public class DAABandsREPLV2 extends DAABandsV2 {
 		log("REPL Commands:");
 		log("  version\n\tPrint DAIDALUS version");
 		log("  configFolder <absolute-path-to-config-folder>\n\tSets the config folder");
-		log("  precision <n>\n\tSets the precision of output values");
 		log("  config <file.conf>\n\tSets the configuration file to be loaded <file.conf>");
+		log("  precision <n>\n\tSets the precision of output values");
 		log("  wind <wind_info>\n\tSets wind vector information, a JSON object enclosed in double quotes \"{ deg: d, knot: m }\", where d and m are reals");
 		log("  ownship <ownship-data>\n\twhere data is in daa format");
 		log("  traffic <traffic-aircraft-data>\n\twhere data is in daa format");
 		System.exit(0);
-	}
-
-	/**
-	 * Utility function, parses CLI arguments
-	 */
-	public DAABandsREPLV2 parseCliArgs (String[] args) {
-		if (args != null && args.length == 0) {
-			printHelpMsg();
-			System.exit(0);
-		}
-		for (int a = 0; a < args.length; a++) {
-			if (args[a].equals("--help") || args[a].equals("-help") || args[a].equals("-h")) {
-				printHelpMsg();
-				System.exit(0);
-			} else if (args[a].startsWith("--list-monitors") || args[a].startsWith("-list-monitors")) {
-				System.out.println(printMonitorList());
-				System.exit(0);
-			} else if (args[a].startsWith("--list-alerters") || args[a].startsWith("-list-alerters")) {
-				// list alerters for a given configuration
-				if ((a + 1) < args.length) { daaConfig = args[++a]; }
-				loadConfig();
-				System.out.println(printAlerters());
-				System.exit(0);
-			} else if (args[a].startsWith("--version") || args[a].startsWith("-version")) {
-				System.out.println(getVersion());
-				System.exit(0);
-			} else if (a < args.length - 1 && (args[a].startsWith("--prec") || args[a].startsWith("-prec") || args[a].equals("-p"))) {
-				if (a + 1 < args.length) { precision = Integer.parseInt(args[++a]); }
-			} else if (a < args.length - 1 && (args[a].startsWith("--conf") || args[a].startsWith("-conf") || args[a].equals("-c"))) {
-				if (a + 1 < args.length) {
-					daaConfigFile = args[++a]; 
-					daaConfig = Paths.get(configFolder + "/" + daaConfigFile).toAbsolutePath().toString(); 
-				}
-			} else if (a < args.length - 1 && (args[a].startsWith("--alerter") || args[a].startsWith("-alerter") || args[a].equals("-a"))) {
-				if (a + 1 < args.length) { daaAlerter = args[++a]; }
-			} else if (a < args.length - 1 && (args[a].startsWith("--out") || args[a].startsWith("-out") || args[a].equals("-o"))) {
-				if (a + 1 < args.length) { ofname = args[++a]; }
-			} else if (a < args.length - 1 && (args[a].startsWith("--ownship") || args[a].startsWith("-ownship"))) {
-				if (a + 1 < args.length) { ownshipName = args[++a]; }
-			} else if (a < args.length - 1 && (args[a].startsWith("--wind") || args[a].startsWith("-wind"))) {
-				if (a + 1 < args.length) { wind = args[++a]; }
-			} else if (a < args.length - 1 && (args[a].startsWith("--profiler-on") || args[a].startsWith("-profiler-on"))) {
-				PROFILER_ENABLED = true;
-			} else if (args[a].startsWith("-")) {
-				System.err.println("** Warning: Invalid option (" + args[a] + ")");
-			} else {
-				ifname = args[a];
-			}
-		}
-		scenario = removeExtension(getFileName(ifname));
-		if (ofname == null) {
-			ofname = scenario + ".json";
-		}
-		return this;
 	}
 
 	/**

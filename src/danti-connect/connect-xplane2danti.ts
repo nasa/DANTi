@@ -64,7 +64,7 @@ danti.activate().then((success: boolean) => {
                 if (data.ownship) {
                     if (!data.ownship.error) {
                         // console.log("[connect-xplane2danti] Sending data to DANTi Display", data);
-                        const ownshipData: string = xplane.printDantiAircraft(data, 0);
+                        const ownshipData: string = xplane.printDaaAircraft(data, 0);
                         console.log("[connect-xplane2danti] ownship data", ownshipData);
                         // send ownship data
                         await danti?.sendOwnshipData(ownshipData);
@@ -73,7 +73,7 @@ danti.activate().then((success: boolean) => {
                     }
                 }
                 // send traffic info
-                const acData: string[] = xplane.printDantiTraffic(data);
+                const acData: string[] = xplane.printDaaTraffic(data);
                 console.log("[connect-xplane2danti] Traffic", acData);
                 for (let i = 0; i < acData?.length; i++) {
                     if (data.traffic) {

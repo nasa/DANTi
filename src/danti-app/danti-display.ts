@@ -45,9 +45,13 @@ import { DaaVoice, Guidance, GuidanceKind } from '../daa-displays/daa-voice';
 import { DAAClient } from "../daa-displays/utils/daa-client";
 import { 
     DantiRequest, DantiRequestType, DantiResponse, DANTI_URL, 
-    RegisterResponse, RenderRequest, SetFlightPlanRequest
+    RegisterResponse, RenderRequest, SetFlightPlanRequest, AvionicsData
 } from "./danti-interface";
-import { INTERPOLATE, ScreenType, THRESHOLD_ALT_SL3, UPDATE_HEADING_AT_LOW_SPEEDS, USE_TCAS_SL3, VERBOSE_DBG } from '../config';
+import { 
+    INTERPOLATE, ScreenType, THRESHOLD_ALT_SL3, 
+    UPDATE_HEADING_AT_LOW_SPEEDS, USE_TCAS_SL3, 
+    VERBOSE_DBG 
+} from '../config';
 import { TailNumberIndicator } from '../daa-displays/daa-tail-number';
 import { LayeringMode } from '../daa-displays/daa-map-components/leaflet-aircraft';
  
@@ -62,6 +66,7 @@ export interface DantiWidgets {
     tailNumber: TailNumberIndicator
 }
 export interface DantiData {
+    avionics?: AvionicsData,
     flightData: LLAData, 
     bands: ScenarioDataPoint 
 }
@@ -225,6 +230,7 @@ export class DantiDisplay {
                                 switch (req.type) {
                                     case "render-request": {
                                         const data: DantiData = req.data;
+                                        if (req.data?.avionics) { console.log(`[danti-display] Using avionics data`, { avionics: data.avionics })}
                                         this.render(data);
                                         break;
                                     }
@@ -265,7 +271,12 @@ export class DantiDisplay {
                 const bands: ScenarioDataPoint = data.bands;
                 if (VERBOSE_DBG) { console.log(`[danti-display] Rendering `, data); }
 
-                danti.map.setPosition(flightData.ownship.s);
+                // try to use avionics data if they are available
+                const lat : number = isFinite(+data?.avionics?.lat?.val) ? +data.avionics.lat.val : +flightData.ownship.s.lat;
+                const lon : number = isFinite(+data?.avionics?.lon?.val) ? +data.avionics.lon.val : +flightData.ownship.s.lon;
+                const alt : number = isFinite(+data?.avionics?.alt?.val) ? +data.avionics.alt.val : +flightData.ownship.s.alt;
+                const pos: LatLonAlt<number> = { lat, lon, alt };
+                danti.map.setPosition(pos);
                 // set tail number
                 danti.tailNumber.setTailNumber(flightData.ownship.id);
                 if (this.lastTailNumber !== flightData.ownship.id) {
@@ -286,10 +297,13 @@ export class DantiDisplay {
                 }
                 if (bands && !bands.Ownship) { console.warn("Warning: using ground-based data for the ownship"); }
 
-                const heading: number = (bands?.Ownship?.acstate?.heading) ? +bands.Ownship.acstate.heading.val : Compass.v2deg(data.flightData.ownship.v);
-                const airspeed: number = (bands?.Ownship?.acstate?.airspeed) ? +bands.Ownship.acstate.airspeed.val : AirspeedTape.v2gs(data.flightData.ownship.v);
-                const vspeed: number = +data.flightData.ownship.v.z;
-                const alt: number = +data.flightData.ownship.s.alt;
+                // try to use avionics data if they are available, they will provide magnetic heading, true airspeed, and vertical speed
+                const heading: number = isFinite(+data.avionics?.magheading?.val) ? +data.avionics.magheading.val
+                    : isFinite(+bands?.Ownship?.acstate?.heading?.val) ? +bands.Ownship.acstate.heading.val : Compass.v2deg(data.flightData.ownship.v);
+                const airspeed: number = isFinite(+data.avionics?.tas?.val) ? +data.avionics.tas.val
+                    : isFinite(+bands?.Ownship?.acstate?.airspeed?.val) ? +bands.Ownship.acstate.airspeed.val : AirspeedTape.v2gs(data.flightData.ownship.v);
+                const vspeed: number = isFinite(+data.avionics?.vspeed?.val) ? +data.avionics.vspeed.val
+                    : isFinite(+bands?.Ownship?.acstate?.verticalspeed?.val) ? +bands.Ownship.acstate.verticalspeed.val : +data.flightData.ownship.v.z;
                 if (UPDATE_HEADING_AT_LOW_SPEEDS || airspeed > 0.01) { // this check avoids spurious compass rose turns when airspeed is close to zero
                     danti.compass.setCompass(heading);
                 }

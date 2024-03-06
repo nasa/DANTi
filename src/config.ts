@@ -37,7 +37,7 @@ export type ScreenType = "21:9" | "ultra-widescreen" | "16:9" | "widescreen" | "
  */
 
 // default DANTi address and port
-export const DANTI_ADDRESS: string = "0.0.0.0"; // default is localhost
+export const DANTI_ADDRESS: string = "localhost"; // default is localhost
 export const DANTI_PORT: number = 8082;
 
 // whether danti-app should use https to connect to the server (this is not necessary when using localhost)
@@ -59,9 +59,9 @@ export const FULLSCREEN: boolean = false;
 export const MAXIMIZED: boolean = true;
 export const WINDOW_RESIZE_DELAY: number = 500; //ms
 
-// postion of the danti window, can be used to place danti on a specific screen
-export const MARGIN_TOP: number = 0;
-export const MARGIN_LEFT: number = 0; // 1920;
+// position of the danti window, can be used to place danti on a specific screen
+export const MARGIN_TOP: number = 0; // this value can be overridden with the danti option "top", e.g., see run-danti target in the makefile
+export const MARGIN_LEFT: number = 0; // this value can be overridden with the danti option "left", e.g., see run-danti target in the makefile
 
 // default frames per second, used to smooth the animation of the traffic display
 export const FPS: number = 8;
@@ -75,10 +75,9 @@ export const UPDATE_HEADING_AT_LOW_SPEEDS: boolean = false;
 // whether DANTi should be terminated upon disconnection of client or data source
 export const TERMINATE_ON_DISCONNECT: boolean = true;
 
-// DAA configuration, stored in daa-config/2.x
-export const DAA_CONFIG: string = "DANTi_SL3.conf"; // DWC_SL3 300ft x 0.3nmi
-
-// whether the special daa setting "SL3" should be used -- when using this configuration, DANTi suppresses warning alerts for altitudes below THRESHOLD_ALT_SL3
+// DANTi configuration
+export const DANTI_CONFIG: string = "DANTi_SL3.conf"
+// whether the special daa configutaion SL3 should be used -- when using this configuration, DANTi suppresses warning alerts for altitudes below THRESHOLD_ALT_SL3
 export const USE_TCAS_SL3: boolean = true;
 // altitude threshold below which we suppress warning alerts
 // TODO: the altitude threshold should not be absolute altitude but above ground level (AGL) altitude
