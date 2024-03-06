@@ -207,6 +207,7 @@ export interface TrafficData {
     alt: { val: string, units: string }, // altitude
     track: { val: string, units: string }, // true track
     heading?: { val: string, units: string }, // true heading
+    magvar?: { val: string, units: string }, // magnetic variation
     gs: { val: string, units: string }, // true ground speed
     vspeed: { val: string, units: string }, // vertical speed
     wow: { val: string, units: string }, // weight on wheels
@@ -218,8 +219,6 @@ export interface TrafficData {
  * Data received from the avionics of the ownship
  */
 export interface AvionicsData extends TrafficData {
-    magheading: { val: string, units: string }, // magnetic heading
-    magvar: { val: string, units: string }, // magnetic variation
     ias: { val: string, units: string }, // indicated airspeed
     tas: { val: string, units: string } // true airspeed
 }

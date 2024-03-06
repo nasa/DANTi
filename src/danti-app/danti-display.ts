@@ -266,6 +266,7 @@ export class DantiDisplay {
             const daaSymbols: string[] = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
             const danti: DantiWidgets = this.widgets;
             const flightData: LLAData = data.flightData;
+            const magvar: number = isFinite(+data.avionics?.magvar?.val) ? +data.avionics.magvar.val : 0;
             if (flightData.ownship.id !== "--") { // this check avoids display resets due to holes in the data stream
 
                 const bands: ScenarioDataPoint = data.bands;
@@ -298,14 +299,14 @@ export class DantiDisplay {
                 if (bands && !bands.Ownship) { console.warn("Warning: using ground-based data for the ownship"); }
 
                 // try to use avionics data if they are available, they will provide magnetic heading, true airspeed, and vertical speed
-                const heading: number = isFinite(+data.avionics?.magheading?.val) ? +data.avionics.magheading.val
-                    : isFinite(+bands?.Ownship?.acstate?.heading?.val) ? +bands.Ownship.acstate.heading.val : Compass.v2deg(data.flightData.ownship.v);
+                const heading: number = isFinite(+bands?.Ownship?.acstate?.heading?.val) ? +bands.Ownship.acstate.heading.val : Compass.v2deg(data.flightData.ownship.v);
+                const magHeading: number = heading + magvar;
                 const airspeed: number = isFinite(+data.avionics?.tas?.val) ? +data.avionics.tas.val
                     : isFinite(+bands?.Ownship?.acstate?.airspeed?.val) ? +bands.Ownship.acstate.airspeed.val : AirspeedTape.v2gs(data.flightData.ownship.v);
                 const vspeed: number = isFinite(+data.avionics?.vspeed?.val) ? +data.avionics.vspeed.val
                     : isFinite(+bands?.Ownship?.acstate?.verticalspeed?.val) ? +bands.Ownship.acstate.verticalspeed.val : +data.flightData.ownship.v.z;
                 if (UPDATE_HEADING_AT_LOW_SPEEDS || airspeed > 0.01) { // this check avoids spurious compass rose turns when airspeed is close to zero
-                    danti.compass.setCompass(heading);
+                    danti.compass.setCompass(magHeading);
                 }
                 danti.airspeedTape.setAirSpeed(airspeed, AirspeedTape.units.knots);
                 danti.verticalSpeedTape.setVerticalSpeed(vspeed);
@@ -326,7 +327,8 @@ export class DantiDisplay {
                         callSign: data.id,
                         s: data.s,
                         v: data.v,
-                        symbol: daaSymbols[alert_level]
+                        symbol: daaSymbols[alert_level],
+                        magvar
                     };
                     if (alert_level > max_alert) {
                         max_alert = alert_level;
