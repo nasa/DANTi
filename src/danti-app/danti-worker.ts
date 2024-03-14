@@ -193,6 +193,12 @@ export class DantiWorker implements DantiWorkerInterface {
         return await this.sendText("config", data);
     }
     /**
+     * Sets a new stale threshold for traffic data
+     */
+    async staleThreshold(data: string): Promise<string> {
+        return await this.sendText("stale-threshold", data);
+    }
+    /**
      * Sends compute-bands request to the worker
      */
     async computeBands(): Promise<{ bands: string, lla: string }> {

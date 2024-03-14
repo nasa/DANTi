@@ -36,7 +36,7 @@ import { AddressInfo } from 'net';
 import { 
 	LabelsRequest, DantiRequest, RegisterResponse, RenderRequest, TrafficDataRequest, 
 	UnitsRequest, OwnshipNameRequest, ConfigRequest, FlightPlanRequest, 
-	SetFlightPlanRequest, OwnshipDataRequest, AvionicsData, AvionicsDataRequest 
+	SetFlightPlanRequest, OwnshipDataRequest, AvionicsData, AvionicsDataRequest, StaleThresholdRequest 
 } from './danti-interface';
 import { DantiData } from './danti-display';
 // import * as fs from 'fs';
@@ -237,6 +237,7 @@ export class DantiServer {
 	 * - "labels": forwards labels to danti-worker
 	 * - "units": forwards units to danti-worker
 	 * - "epoch-end": sync event that triggers the computation of bands in danti-worker
+	 * - "stale-threshold": sets the stale threshold for declaring aircraft data stale (stale data is discarded)
 	 */
 	async onMessageReceived (msg: string, wsocket: ws): Promise<void> {
 		try {
@@ -422,6 +423,15 @@ export class DantiServer {
 								} catch (error) {
 									this.log(`[danti-server] Error while parsing REPL.json`, error);
 								}
+							}
+							break;
+						}
+						case "stale-threshold": {
+							// send stale threshold to worker
+							const data: string = (<StaleThresholdRequest> req).data;
+							if (data) {
+								console.log("Received stale threshold", data);
+								await this.worker.staleThreshold(data);
 							}
 							break;
 						}

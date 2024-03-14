@@ -65,7 +65,7 @@ import gov.nasa.larcfm.Util.f;
 class DaaStreamReader extends StateReader {
 
 	// whether dbg messages are printed
-	protected boolean dbg_enabled = false;
+	protected boolean dbg_enabled = true;
 
 	// ownship name (if null, then the first traffic aircraft is considered the ownship
 	protected String ownshipName;
@@ -265,7 +265,10 @@ class DaaStreamReader extends StateReader {
 			log("own index " + own_index);
 			if (own_index >= 0) {
 				double current_time = getTime(own_index);
+				double stale_time = current_time - stale_threshold;
 				log("current time " + current_time);
+				log("stale threshold " + stale_threshold);
+				log("stale time:" + stale_time);
 				List<String> stale = new ArrayList<String>();
 				if (current_time >= 0) {
 					Set<String> keys = trafficData.keySet();
@@ -275,7 +278,7 @@ class DaaStreamReader extends StateReader {
 						int ac_index = getIndex(ac_name);
 						double ac_time = getTime(ac_index);
 						String msg = "checking aircraft " + ac_name + " (time: " + ac_time +")";
-						if (ac_time < current_time - stale_threshold) {
+						if (ac_time < stale_time) {
 							msg += " -- stale";
 							stale.add(ac_name);
 							states.remove(ac_index);
@@ -360,7 +363,7 @@ class DantiStreamWalker {
 	protected ParameterData params;
 	protected String ownshipName;
 	protected List<String> trafficNames = new ArrayList<String>();
-	protected double staleThreshold = 8; // sec
+	protected double staleThreshold = 10; // sec
 	protected double currentTime = 0;
 
 	/**
@@ -368,6 +371,7 @@ class DantiStreamWalker {
 	 */
 	public DantiStreamWalker () { }
 	public DantiStreamWalker (String daaData) { walk(daaData); }
+	public DantiStreamWalker (String daaData, double threshold) { staleThreshold = threshold; walk(daaData); }
 
 	/**
 	 * Set stale threshold
@@ -588,6 +592,9 @@ public class DAABandsREPLV2 extends DAABandsV2 {
 	// stale threshold: entries older than (current_time - staleness_threshold) are not used in computations
 	protected double staleThreshold = 10;
 
+	// daa data stream walker
+	protected DantiStreamWalker walker;
+
 	// file that will contain LLA data
 	protected String sfname;
 	// lla print writer
@@ -762,11 +769,11 @@ public class DAABandsREPLV2 extends DAABandsV2 {
 		// load wind
 		loadWind();
 		// create file walker
-		DantiStreamWalker walker = new DantiStreamWalker(toDAA());
+		walker = new DantiStreamWalker(toDAA(), staleThreshold);
 		// set ownship name
 		walker.setOwnshipName(ownshipName);
-		// set stale threshold
-		walker.setStaleThreshold(staleThreshold);
+		// // set stale threshold
+		// walker.setStaleThreshold(staleThreshold);
 		// walk data
 		boolean success = walkData(walker) && compute_lla(walker);
 		log("Done! " + success);
@@ -895,7 +902,7 @@ public class DAABandsREPLV2 extends DAABandsV2 {
 		}
 	}
 	/**
-	 * Executes the command line. Returns true if the command has been executed.
+	 * Executes the command line. Returns true if the command has been executed successfully.
 	 */
 	boolean execCommandLine (String line) {
 		if (isMetaCommand(cmd_reset, line)) {
@@ -919,8 +926,12 @@ public class DAABandsREPLV2 extends DAABandsV2 {
 		}
 		if (isCommand(cmd_stale_threshold, line)) {
 			double val = Double.parseDouble(getArgs(cmd_stale_threshold, line));
-			setStaleThreshold(val);
-			return true;
+			if (Double.isFinite(val)) {
+				setStaleThreshold(val);
+				if (walker != null) { walker.setStaleThreshold(val); }
+				return true;
+			}
+			return false;
 		}
 		if (isCommand(cmd_config, line)) {
 			// update daa config

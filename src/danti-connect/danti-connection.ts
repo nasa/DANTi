@@ -44,7 +44,8 @@ import {
     FlightPlanRequest,
     ResetRequest,
     AvionicsDataRequest,
-    AvionicsData
+    AvionicsData,
+    StaleThresholdRequest
 } from '../danti-app/danti-interface';
 
 function get_unique_id (format?: string) {
@@ -254,6 +255,16 @@ export class DantiConnection implements DantiDataSourceInterface {
     async notifyEpochEnd (epoch?: number): Promise<boolean> {
         const req: EpochEndNotification = { id: get_unique_id(), type: "epoch-end" };
         return await this.sendData(req);
+    }
+    /**
+     * Sends aircraft stale threshold to danti-server
+     */
+    async sendStaleThreshold(data: string): Promise<boolean> {
+        if (data) {
+            const req: StaleThresholdRequest = { id: get_unique_id(), type: "stale-threshold", data };
+            return await this.sendData(req);
+        }
+        return false;
     }
     /**
      * Sends daa config to danti-server

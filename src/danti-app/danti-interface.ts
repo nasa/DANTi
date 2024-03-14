@@ -37,7 +37,7 @@ export declare type DantiRequestType =
     "register-danti" | "register-virtual-pilot" | "render-request" 
     | "traffic" | "ownship" | "ownship-name" | "flight-plan"
     | "labels" | "units" | "wind" | "config" 
-    | "epoch-end" | "reset" | "avionics";
+    | "epoch-end" | "reset" | "avionics" | "stale-threshold";
 export declare interface DantiRequest {
     id: string, // unique message id
     type: DantiRequestType,
@@ -51,7 +51,8 @@ export declare interface DantiResponse {
 
 export declare type DantiStreamerRequest = RegisterRequest | RenderRequest | TrafficDataRequest
     | OwnshipDataRequest | LabelsRequest | UnitsRequest | WindRequest | OwnshipNameRequest
-    | EpochEndNotification | ConfigRequest | FlightPlanRequest | ResetRequest | AvionicsDataRequest;
+    | EpochEndNotification | ConfigRequest | FlightPlanRequest | ResetRequest | AvionicsDataRequest
+    | StaleThresholdRequest;
 
 export declare interface RegisterRequest extends DantiRequest {
     type: "register-danti" // message type
@@ -141,6 +142,15 @@ export declare interface ConfigRequest extends DantiRequest {
 export declare interface ConfigResponse {
     success: boolean
 }
+
+export declare interface StaleThresholdRequest extends DantiRequest {
+    type: "stale-threshold",
+    data: string
+}
+export declare interface StaleThresholdResponse {
+    success: boolean
+}
+
 export declare interface EpochEndNotification extends DantiRequest {
     type: "epoch-end"
 }

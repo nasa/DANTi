@@ -136,6 +136,7 @@ export class XPlaneConnection {
         let time: string = opt?.useClock ? `${this.clock}`
             : aircraft?.time || data?.time || `${this.clock}`;
         if (opt?.useMillis) {
+            // time is in milliseconds, we need to divide be 1000 to have seconds
             time = `${+time / 1000}`;
         }
         const dantiData: string = [
