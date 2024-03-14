@@ -44,7 +44,7 @@ export const DANTI_PORT: number = 8082;
 export const USE_HTTPS: boolean = false;
 
 // whether debug messages are printed, this may slow down the simulation
-export const DBG: boolean = false;
+export const DBG: boolean = true;
 export const VERBOSE_DBG: boolean = false;
 export const ENABLE_PROFILER: boolean = true;
 
@@ -68,6 +68,9 @@ export const FPS: number = 8;
 
 // whether the traffic display should interpolate traffic data, e.g., to compensate low display update rates (e.g., 1Hz) and so have a smoother rendering
 export const INTERPOLATE: boolean = true;
+
+// stale threshold for traffic aircraft, in seconds (0=disabled)
+export const STALE_THRESHOLD: number = 10; // [s]
 
 // whether heading can be updated reliably at low speeds (<0.01kn)
 export const UPDATE_HEADING_AT_LOW_SPEEDS: boolean = false;
