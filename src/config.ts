@@ -37,7 +37,7 @@ export type ScreenType = "21:9" | "ultra-widescreen" | "16:9" | "widescreen" | "
  */
 
 // default DANTi address and port
-export const DANTI_ADDRESS: string = "localhost"; // default is localhost
+export const DANTI_ADDRESS: string = "0.0.0.0"; // default is localhost
 export const DANTI_PORT: number = 8082;
 
 // whether danti-app should use https to connect to the server (this is not necessary when using localhost)
@@ -73,7 +73,7 @@ export const INTERPOLATE: boolean = true;
 export const STALE_THRESHOLD: number = 10; // [s]
 
 // whether heading can be updated reliably at low speeds (<0.01kn)
-export const UPDATE_HEADING_AT_LOW_SPEEDS: boolean = false;
+export const UPDATE_HEADING_AT_LOW_SPEEDS: boolean = true;
 
 // whether DANTi should be terminated upon disconnection of client or data source
 export const TERMINATE_ON_DISCONNECT: boolean = true;

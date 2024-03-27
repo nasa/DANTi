@@ -151,6 +151,8 @@ export class DantiDisplay {
             animate: INTERPOLATE,
             duration: UPDATE_FREQUENCY
         });
+        // set compass to magnetic heading
+        compass.magneticHeading(true);
         // map zoom is controlled by nmiSelector
         const hscale: HScale = new HScale("hscale", {
             top: ultra_widescreen ? 825
@@ -300,13 +302,13 @@ export class DantiDisplay {
 
                 // try to use avionics data if they are available, they will provide magnetic heading, true airspeed, and vertical speed
                 const heading: number = isFinite(+bands?.Ownship?.acstate?.heading?.val) ? +bands.Ownship.acstate.heading.val : Compass.v2deg(data.flightData.ownship.v);
-                const magHeading: number = heading + magvar;
                 const airspeed: number = isFinite(+data.avionics?.tas?.val) ? +data.avionics.tas.val
                     : isFinite(+bands?.Ownship?.acstate?.airspeed?.val) ? +bands.Ownship.acstate.airspeed.val : AirspeedTape.v2gs(data.flightData.ownship.v);
                 const vspeed: number = isFinite(+data.avionics?.vspeed?.val) ? +data.avionics.vspeed.val
                     : isFinite(+bands?.Ownship?.acstate?.verticalspeed?.val) ? +bands.Ownship.acstate.verticalspeed.val : +data.flightData.ownship.v.z;
                 if (UPDATE_HEADING_AT_LOW_SPEEDS || airspeed > 0.01) { // this check avoids spurious compass rose turns when airspeed is close to zero
-                    danti.compass.setCompass(magHeading);
+                    danti.compass.setCompass(heading);
+                    danti.compass.magVar(magvar);
                 }
                 danti.airspeedTape.setAirSpeed(airspeed, AirspeedTape.units.knots);
                 danti.verticalSpeedTape.setVerticalSpeed(vspeed);
@@ -327,8 +329,7 @@ export class DantiDisplay {
                         callSign: data.id,
                         s: data.s,
                         v: data.v,
-                        symbol: daaSymbols[alert_level],
-                        magvar
+                        symbol: daaSymbols[alert_level]
                     };
                     if (alert_level > max_alert) {
                         max_alert = alert_level;
