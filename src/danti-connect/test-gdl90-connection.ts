@@ -30,22 +30,22 @@
  * UNILATERAL TERMINATION OF THIS AGREEMENT.
  */
 
-import { Stratus3Connection } from "./stratus-connection";
+import { GDL90Connection } from "./gdl90-connection";
 
 // get args from command line
 const args: string[] = process.argv?.slice(2);
 console.log('args: ', args);
 
 // connect to xplane
-const stratus: Stratus3Connection = new Stratus3Connection();
+const gdl90: GDL90Connection = new GDL90Connection();
 
 // get data from xplane
 const test = async () => {
-    console.log(`[test-stratus-connection] testing xplane connection...`);
+    console.log(`[test-gdl90-connection] testing gdl90 connection...`);
 
     // activate the connection
-    await stratus.activate();
-    console.log(`[test-stratus-connection] stratus.activate()`);
+    console.log(`[test-gdl90-connection] gdl90.activate()`);
+    await gdl90.activate({ dmpFile: "stratus3.dmp" });
 }
 // run the test
 test();

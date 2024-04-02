@@ -30,29 +30,15 @@
 /**
  * @author Paolo Masci
  * @date Mar 27, 2024
- * @desc Utility functions for connecting DANTi to a STRATUS 3 receiver
+ * @desc Utility functions for connecting DANTi to a DAS-B GDL90 receiver
  */
 
-import { exit } from 'process';
 import { DANTI_ADDRESS, DANTI_PORT, DBG } from '../config';
 import * as WebSocket from 'ws';
 import * as dgram from 'node:dgram';
+import * as fs from 'fs';
 import { 
-    LabelsRequest,
-    UnitsRequest,
     DantiDataSourceInterface, 
-    DantiStreamerRequest, 
-    EpochEndNotification, 
-    OwnshipDataRequest, 
-    OwnshipNameRequest, 
-    TrafficDataRequest, 
-    WindRequest,
-    ConfigRequest,
-    FlightPlanRequest,
-    ResetRequest,
-    AvionicsDataRequest,
-    AvionicsData,
-    StaleThresholdRequest
 } from '../danti-app/danti-interface';
 
 function get_unique_id (format?: string) {
@@ -91,7 +77,7 @@ export interface StreamDescriptor {
 /**
  * Stratus3 Connection opens a UDP socket on port 4000 with a Stratus 3 receiver
  */
-export class Stratus3Connection implements DantiDataSourceInterface {
+export class GDL90Connection implements DantiDataSourceInterface {
     // connection to danti-display
     protected danti: WebSocketConnection = { host: DANTI_ADDRESS, port: DANTI_PORT, socket: null };
 
@@ -103,6 +89,9 @@ export class Stratus3Connection implements DantiDataSourceInterface {
 
     // hooks to handlers
     protected handlers: StreamerHandlers = {};
+
+    // dump file, stores all received messages
+    protected dmpFile: string;
 
     /**
      * Constructor
@@ -142,6 +131,10 @@ export class Stratus3Connection implements DantiDataSourceInterface {
         });
         this.server.on('message', (msg, rinfo) => {
             console.log(`UDP Server received message: ${msg} from ${rinfo.address}:${rinfo.port}`);
+            if (this.dmpFile) {
+                console.log(`Saving message to file ${this.dmpFile}...`);
+                fs.appendFileSync(this.dmpFile, msg + "\n\n");
+            }
         });
         this.server.on('listening', () => {
             const address = this.server.address();
@@ -190,8 +183,19 @@ export class Stratus3Connection implements DantiDataSourceInterface {
      * Activates the data server
      * All data structures from previous sessions are automatically reset upon activation
      */
-    async activate (opt?: StreamerHandlers): Promise<boolean> {
-        this.handlers = opt || {};
+    async activate (opt?: { handlers?: StreamerHandlers, dmpFile?: string }): Promise<boolean> {
+        this.handlers = opt?.handlers || {};
+        this.dmpFile = opt?.dmpFile || null;
+        console.log("[gdl90-connection] Activate", opt);
+        if (this.dmpFile) {
+            try {
+                fs.writeFileSync(this.dmpFile, "", { encoding: 'binary' });
+                console.warn(`[gdl90-connection] Received messages will be saved to ${this.dmpFile}`);
+            } catch (err) {
+                console.warn(`[gdl90-connection] Warning: unable to write file ${this.dmpFile}`, { err });
+                this.dmpFile = null;
+            }
+        }
         let success: boolean = await this.createUdpSocket();
         // success = success && await this.createWebSocket(this.danti);
         // // clear aircraft cache
