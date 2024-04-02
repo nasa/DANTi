@@ -133,7 +133,7 @@ export class GDL90Connection implements DantiDataSourceInterface {
             console.log(`UDP Server received message: ${msg} from ${rinfo.address}:${rinfo.port}`);
             if (this.dmpFile) {
                 console.log(`Saving message to file ${this.dmpFile}...`);
-                fs.appendFileSync(this.dmpFile, msg + "\n\n");
+                fs.appendFileSync(this.dmpFile, msg + "\n\n", { encoding: 'binary' });
             }
         });
         this.server.on('listening', () => {
