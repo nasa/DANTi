@@ -130,10 +130,9 @@ public class XPlaneConnection {
      */
     int MAX_TRAFFIC = 4;
     /**
-     * minimum airspeed (ms/sec), this is used to try to distinguish situations where
-     * the xplane simulation is paused
+     * minimum airspeed (ms/sec), useful to filter aircraft, e.g., to remove ground traffic, set MIN_AIRSPEED to a value > 0
      */
-    int MIN_AIRSPEED = 4; // [m/sec]
+    int MIN_AIRSPEED = 0; // [m/sec]
 
     /**
      * tail numbers
