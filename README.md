@@ -24,12 +24,14 @@ The prototype can be connected to the [X-Plane flight simulator](https://www.x-p
 
 
 ## Build Instructions
+The current version of the compilation scripts work only under MacOS and Linux.
+
 To compile DANTi from the source code:
 1. Open a terminal window and change directory to the `danti` folder
 2. Run `make` in the terminal window. This command will download the dependencies and create a folder `dist/` with the DANTi distribution
-3. Download [XPlaneConnect Toolbox v.1.3-RC5](https://github.com/nasa/XPlaneConnect/releases/download/v1.3-rc5/XPlaneConnect.zip), decompress the zip file and copy the XPlaneConnect folder to the X-Plane plugins folder ([X-Plane Directory]/Resources/plugins/). See also installation instructions at https://github.com/nasa/XPlaneConnect
+3. Download [XPlaneConnect Toolbox v.1.3-RC5](https://github.com/nasa/XPlaneConnect/releases/download/v1.3-rc5/XPlaneConnect.zip), decompress the zip file into the XPlane `Resources/plugins/` folder. See also installation instructions at https://github.com/nasa/XPlaneConnect
+    > Note: On MacOS, you may need to run the following command to correctly install the XPlaneConnect Toolbox: `xattr -d -r com.apple.quarantine <XPlaneConnect-Directory>`
 
-> Note: The current version of the compilation scripts work only under MacOS and Linux. Support for compilation on Windows will be added in the near future.
 
 
 ## Launch Instruction
