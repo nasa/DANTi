@@ -30,7 +30,8 @@
 		"pack": "electron-builder --dir",
 		"convert": "node dist/danti-utils/convert-dantilog2daa.js",
 		"dist": "electron-builder",
-		"daa-displays": "cd submodules/daa-displays && npm start"
+		"daa-displays": "cd submodules/daa-displays && npm start",
+		"convert-csv2daa": "node dist/danti-utils/convert-csv2daa.js"
 	},
 	"dependencies": {
 		"animate.css": "^4.1.1",
