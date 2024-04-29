@@ -95,18 +95,30 @@ int main(int argc, char* argv[]) {
     decode_gdl90_message_ext(&heartbeat_report_1);
 
     gdl_message_t foreflight_message_1 = {
-        .flag0 = 0x7e,
-        .messageId = 0x65,
+        .flag0 = 0x7e, //126
+        .messageId = 0x65, //101
         .data = {
             0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x7a, 0x4e, 0x53, 0x74, 0x72, 0x61, 0x74, 0x75,
             0x73, 0x00, 0x53, 0x74, 0x72, 0x61, 0x74, 0x75,
             0x73, 0x33, 0x30, 0x33, 0x31, 0x33, 0x31, 0x30,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x74, 0x2b
-
         }
     };
     decode_gdl90_message_ext(&foreflight_message_1);
+
+    gdl_message_t foreflight_message_1_dec = {
+        .flag0 = 126,
+        .messageId = 101,
+        .data = {
+            0,     1,   0,   0,   0,   0,   0,   0,
+            122,  78,  83, 116, 114,  97, 116, 117,
+            115,   0,  83, 116, 114,  97, 116, 117, 
+            115,  51,  48,  51,  49,  51,  49,  48,
+            0,     0,   0,   0,   0,   0, 116,  43
+        }
+    };
+    decode_gdl90_message_ext(&foreflight_message_1_dec);
 
     gdl_message_t foreflight_message_2 = {
         .flag0 = 0x7e,

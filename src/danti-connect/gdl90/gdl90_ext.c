@@ -22,7 +22,7 @@ void decode_gdl90_message_ext(gdl_message_t *rawMsg) {
                     break;
                 }
                 default: {
-                    fprintf(stdout, "Unknown GDL90_EXT_101 submessage ID %d!\n", submsg_id);
+                    fprintf(stdout, "Unknown GDL90_EXT_101 submessage ID %d\n", submsg_id);
                     break;
                 }
             }
