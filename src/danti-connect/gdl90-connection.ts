@@ -41,16 +41,7 @@ import {
     DantiDataSourceInterface, 
 } from '../danti-app/danti-interface';
 
-function get_unique_id (format?: string) {
-	let d: number = new Date().getTime();
-	format = format || 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
-	const uuid = format.replace(/[xy]/g, (c: string) => {
-		const r: number = ((d + Math.random() * 16) % 16) | 0;
-		d = Math.floor(d / 16);
-		return (c === 'x' ? r : (r & 0x7 | 0x8)).toString(16);
-	});
-	return uuid;
-}
+export const GDL_PORT: number = 4000;
 
 export interface SocketConnection {
     socket?: WebSocket;
@@ -121,7 +112,7 @@ export class GDL90Connection implements DantiDataSourceInterface {
     }
 
     /**
-     * Creates a UDP socket connection on port 4000
+     * Creates a UDP socket connection on port 4000 for GDL90 messags
      */
     protected async createUdpSocket (): Promise<boolean> {
         this.server = dgram.createSocket('udp4');
@@ -140,12 +131,12 @@ export class GDL90Connection implements DantiDataSourceInterface {
             const address = this.server.address();
             console.log(`UDP Server listening ${address.address}:${address.port}`);
         });
-        this.server.bind(4000);
+        this.server.bind(GDL_PORT);
         return true;
     }
 
     /**
-     * Creates a websocket connection
+     * Creates a websocket connection with DANTi
      */
     protected async createWebSocket (connection: WebSocketConnection): Promise<boolean> {
         if (!connection) { return false; }
@@ -204,6 +195,7 @@ export class GDL90Connection implements DantiDataSourceInterface {
         // }
         return success;
     }
+
     /**
      * Prints log messages
      */

@@ -48,7 +48,14 @@
 
 */
 
+// server program for udp connection 
+#include <stdio.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+
 int main(int argc, char* argv[]) {
+
     gdl_message_t traffic_report_1 = {
         .flag0 = 0x7e,
         .messageId = 0x14,
