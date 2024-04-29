@@ -288,6 +288,10 @@ ls-scenarios:
 ls-origin:
 	git ls-remote --get-url origin
 
+dir=""
+xattr:
+	xattr -d -r com.apple.quarantine $(dir)
+
 eslint:
 	npx eslint 'src/**/*.ts'
 
