@@ -37,7 +37,7 @@ export type ScreenType = "21:9" | "ultra-widescreen" | "16:9" | "widescreen" | "
  */
 
 // default DANTi address and port
-export const DANTI_ADDRESS: string = "0.0.0.0"; // default is localhost
+export const DANTI_ADDRESS: string = "127.0.0.1"; // default is localhost
 export const DANTI_PORT: number = 8082;
 
 // whether danti-app should use https to connect to the server (this is not necessary when using localhost)
@@ -75,11 +75,17 @@ export const STALE_THRESHOLD: number = 10; // [s]
 // whether heading can be updated reliably at low speeds (<0.01kn)
 export const UPDATE_HEADING_AT_LOW_SPEEDS: boolean = true;
 
+// whether the danti display should use magnetic heading
+export const USE_MAGHEADING: boolean = true;
+
+// whether the ownship should keep the last known valid heading
+export const KEEP_LAST_VALID_HEADING: boolean = true;
+
 // whether DANTi should be terminated upon disconnection of client or data source
 export const TERMINATE_ON_DISCONNECT: boolean = true;
 
 // DANTi configuration
-export const DANTI_CONFIG: string = "DANTi_SL3.conf"
+export const DANTI_CONFIG: string = "DANTivAlpha.conf" // "DANTi_SL3.conf";
 // whether the special daa configutaion SL3 should be used -- when using this configuration, DANTi suppresses warning alerts for altitudes below THRESHOLD_ALT_SL3
 export const USE_TCAS_SL3: boolean = true;
 // altitude threshold below which we suppress warning alerts

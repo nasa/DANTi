@@ -48,8 +48,8 @@ import {
     RegisterResponse, RenderRequest, SetFlightPlanRequest, AvionicsData
 } from "./danti-interface";
 import { 
-    INTERPOLATE, ScreenType, THRESHOLD_ALT_SL3, 
-    UPDATE_HEADING_AT_LOW_SPEEDS, USE_TCAS_SL3, 
+    INTERPOLATE, KEEP_LAST_VALID_HEADING, ScreenType, THRESHOLD_ALT_SL3, 
+    UPDATE_HEADING_AT_LOW_SPEEDS, USE_MAGHEADING, USE_TCAS_SL3, 
     VERBOSE_DBG 
 } from '../config';
 import { TailNumberIndicator } from '../daa-displays/daa-tail-number';
@@ -268,9 +268,25 @@ export class DantiDisplay {
             const daaSymbols: string[] = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
             const danti: DantiWidgets = this.widgets;
             const flightData: LLAData = data.flightData;
-            const magvar: number = isFinite(+data.avionics?.magvar?.val) ? +data.avionics.magvar.val : 0;
-            if (flightData.ownship.id !== "--") { // this check avoids display resets due to holes in the data stream
-
+            if (flightData.ownship.id === "--") {
+                // reset display -- ownship has not been assigned yet
+                this.lastTailNumber = flightData.ownship.id;
+                danti.tailNumber.setTailNumber(flightData.ownship.id);
+                danti.map?.resetAirspace();
+                danti.map?.removeGeoFence();
+                danti.compass?.animationDuration(0);
+                danti.map?.animationDuration(0);
+                danti.airspeedTape?.animationDuration(0);
+                danti.verticalSpeedTape?.animationDuration(0);
+                if (!KEEP_LAST_VALID_HEADING) {
+                    danti.compass.setCompass(0);
+                }
+                danti.compass.magVar(0);
+                danti.airspeedTape.setAirSpeed(0, AirspeedTape.units.knots);
+                danti.verticalSpeedTape.setVerticalSpeed(0);
+                danti.altitudeTape.setAltitude(0, AltitudeTape.units.ft);
+            } else {
+                const magvar: number = USE_MAGHEADING && isFinite(+data.avionics?.magvar?.val) ? +data.avionics.magvar.val : 0;
                 const bands: ScenarioDataPoint = data.bands;
                 if (VERBOSE_DBG) { console.log(`[danti-display] Rendering `, data); }
 
@@ -312,7 +328,8 @@ export class DantiDisplay {
                 }
                 danti.airspeedTape.setAirSpeed(airspeed, AirspeedTape.units.knots);
                 danti.verticalSpeedTape.setVerticalSpeed(vspeed);
-                danti.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
+                // the current version of the altitude tape does not support negative altitudes
+                danti.altitudeTape.setAltitude(alt > 0 ? alt : 0, AltitudeTape.units.ft);
 
                 // flag indicating whether we are mimicking TCAS suppression of warning alerts below a certain altitude
                 const force_caution: boolean = alt < THRESHOLD_ALT_SL3 && USE_TCAS_SL3;
