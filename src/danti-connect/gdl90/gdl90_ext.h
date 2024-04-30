@@ -38,8 +38,13 @@ typedef struct {
 void decode_gdl90_message_ext(gdl_message_t *rawMsg);
 bool decode_gdl90_device_info(gdl_message_t *rawMsg, gdl90_msg_device_info *deviceInfoMsg);
 void print_gdl90_device_info(gdl90_msg_device_info *decodedMsg);
+void json_gdl90_device_info(gdl90_msg_device_info *decodedMsg);
 uint8_t get_gdl90_submsg_id(gdl_message_t *rawMsg);
 bool decode_gdl90_ahrs(gdl_message_t *rawMsg, gdl90_msg_ahrs *ahrsMsg);
 void print_gdl90_ahrs(gdl90_msg_ahrs *decodedMsg);
+void json_gdl90_ahrs(gdl90_msg_ahrs *decodedMsg);
+
+// whether decoded messages are printed in json format
+extern bool JSON_OUTPUT;
 
 #endif  // GDL90_EXT_H_

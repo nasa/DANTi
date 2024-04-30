@@ -1,6 +1,8 @@
 #include "gdl90.h"
 #include "gdl90_ext.h"
 
+bool JSON_OUTPUT = false;
+
 void decode_gdl90_message_ext(gdl_message_t *rawMsg) {
     gdl90_msg_device_info deviceInfoMsg;
     gdl90_msg_ahrs ahrsMsg;
@@ -12,17 +14,17 @@ void decode_gdl90_message_ext(gdl_message_t *rawMsg) {
                 case (MSG_SUBID_DEVICE_INFO): {
                     fprintf(stdout, "Processing Device Info Message\n");
                     decode_gdl90_device_info(rawMsg, &deviceInfoMsg);
-                    print_gdl90_device_info(&deviceInfoMsg);
+                    JSON_OUTPUT ? json_gdl90_device_info(&deviceInfoMsg) : print_gdl90_device_info(&deviceInfoMsg);
                     break;
                 }
                 case (MSG_SUBID_AHRS): {
                     fprintf(stdout, "Processing AHRS Message\n");
                     decode_gdl90_ahrs(rawMsg, &ahrsMsg);
-                    print_gdl90_ahrs(&ahrsMsg);
+                    JSON_OUTPUT ? json_gdl90_ahrs(&ahrsMsg) : print_gdl90_ahrs(&ahrsMsg);
                     break;
                 }
                 default: {
-                    fprintf(stdout, "Unknown GDL90_EXT_101 submessage ID %d\n", submsg_id);
+                    fprintf(stdout, "Unknown GDL90_EXT_101 submessage ID %d!\n", submsg_id);
                     break;
                 }
             }
@@ -81,6 +83,15 @@ void print_gdl90_device_info(gdl90_msg_device_info *decodedMsg) {
     fprintf(stdout, "Device Long Name: %s\n", decodedMsg->deviceLongName);
 }
 
+void json_gdl90_device_info(gdl90_msg_device_info *decodedMsg) {
+    fprintf(stdout, "{ ");
+    fprintf(stdout, "\"version\": \"%d\"", decodedMsg->version);
+    fprintf(stdout, ", \"device_serial_number\": \"%s\"", decodedMsg->deviceSerialNumber);
+    fprintf(stdout, ", \"device_name\": \"%s\"", decodedMsg->deviceName);
+    fprintf(stdout, ", \"device_long_name\": \"%s\"", decodedMsg->deviceLongName);
+    fprintf(stdout, " }\n");
+}
+
 bool decode_gdl90_ahrs(gdl_message_t *rawMsg, gdl90_msg_ahrs *ahrsMsg) {
     // bool rval = gdl90_verifyCrc(rawMsg, GDL90_MSG_LEN_HEARTBEAT);
 
@@ -100,9 +111,18 @@ bool decode_gdl90_ahrs(gdl_message_t *rawMsg, gdl90_msg_ahrs *ahrsMsg) {
 }
 
 void print_gdl90_ahrs(gdl90_msg_ahrs *decodedMsg) {
-    fprintf(stdout, "Roll: %d [deg]\n", (int) decodedMsg->roll);
+    fprintf(stdout, "roll: %d [deg]\n", (int) decodedMsg->roll);
     fprintf(stdout, "Pitch: %d [deg]\n", (int) decodedMsg->pitch);
     fprintf(stdout, "Heading: %d [deg]\n", (int) decodedMsg->heading);
     fprintf(stdout, "Indicated Airspeed: %d [kn]\n", (int) decodedMsg->ias);
     fprintf(stdout, "True Airspeed: %d [kn]\n", (int) decodedMsg->ias);
+}
+void json_gdl90_ahrs(gdl90_msg_ahrs *decodedMsg) {
+    fprintf(stdout, "{ ");
+    fprintf(stdout, "\"roll\": { \"val\": \"%d\", \"units\": \"deg\" }", (int) decodedMsg->roll);
+    fprintf(stdout, ", \"pitch\": { \"val\": \"%d\", \"units\": \"deg\" }", (int) decodedMsg->pitch);
+    fprintf(stdout, ", \"heading\": { \"val\": \"%d\", \"units\": \"deg\" }", (int) decodedMsg->heading);
+    fprintf(stdout, ", \"indicated_airspeed\": { \"val\": \"%d\", \"units\": \"kn\" }", (int) decodedMsg->ias);
+    fprintf(stdout, ", \"true_airspeed\": { \"val\": \"%d\", \"units\": \"kn\" }", (int) decodedMsg->ias);
+    fprintf(stdout, " }\n");
 }

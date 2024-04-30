@@ -56,18 +56,30 @@
 #define GDL90_PORT 4000
 #define DBG_HEX true
 
-int main(int argc, char* argv[]) {
-    int MAX_GDL90_DATA = MAX_GDL90_BUFFER;
+// external variable defined in gdl90_ext.c
+extern bool JSON_OUTPUT;
 
-    enum mode_t { AWAITING_MSG_START, RECEIVING, MSG_END };
+int main(int argc, char* argv[]) {
+    /* 
+     * check command line arguments 
+     */
+    if (argc > 1) {
+        for (int i = 1; i < argc; i++) {
+            fprintf(stderr, "argv[%d] = %s \n", i, argv[i]);
+            if (strcmp(argv[i], "json") == 0 || strcmp(argv[i], "JSON") == 0) {
+                // enable json output
+                JSON_OUTPUT = true;
+            }
+        }
+    }
+
     struct sockaddr_in client_addr;
-    // uint8_t receive_buffer[MAX_GDL90_BUFFER];
+    // allocate receive buffer buffer
+    int MAX_GDL90_DATA = MAX_GDL90_BUFFER;
     uint8_t gdl90_data[MAX_GDL90_DATA];
     socklen_t client_struct_length = sizeof(client_addr);
-    mode_t mode = AWAITING_MSG_START;
     
-    // Clean buffers:
-    // memset(receive_buffer, 0x7e, sizeof(receive_buffer));
+    // Clean buffers
     memset(gdl90_data, 0x7e, sizeof(gdl90_data));
     
     // Create UDP socket:
@@ -83,7 +95,7 @@ int main(int argc, char* argv[]) {
     struct sockaddr_in server_addr = {
         .sin_family = AF_INET,
         .sin_port = htons(GDL90_PORT),
-        .sin_addr.s_addr = htonl(INADDR_ANY) //inet_addr("127.0.0.1")
+        .sin_addr.s_addr = htonl(INADDR_ANY)
     };
     
     // Bind to the set port and IP:
@@ -111,43 +123,12 @@ int main(int argc, char* argv[]) {
         for (int i = 2; i < sizeof(gdl90_data) && gdl90_data[i] != 0x7e; i++) {
             msg.data[len] = gdl90_data[i];
             if (DBG_HEX) {
-                printf(" %d", msg.data[len]); // print hex number
+                printf(" %d", msg.data[len]); // print byte value
             }
             len++;
         }
         printf("\nReceived GDL90 message (type=%d length=%d)\n", msg.messageId, len);
         decode_gdl90_message_ext(&msg);
-
-        // // wait for message start (0x7e) 
-        // if (mode == AWAITING_MSG_START) {
-        //     if (receive_buffer[0] == 0x7e) {
-        //         mode = RECEIVING;
-        //         printf("Message START\n");
-        //         printf("%d\n", receive_buffer[0]); // print hex number
-        //     } else {
-        //         printf("Awaiting MSG START\n");
-        //     }
-        // } else if (mode == RECEIVING && receive_buffer[0] == 0x7e) {
-        //     mode = MSG_END;
-        //     needle = 0;
-        //     printf("Message END\n");
-        //     printf("Decoding START...\n");
-        //     gdl_message_t msg = {
-        //         .flag0 = 0x7e,
-        //         .messageId = gdl90_data[0]
-        //     };
-        //     for (int i = 0; i < sizeof(gdl90_data) && gdl90_data[i] != 0x7e; i++) {
-        //         printf("%d\n", gdl90_data[i]); // print hex number
-        //         msg.data[i] = gdl90_data[i];
-        //     }
-        //     decode_gdl90_message(&msg);
-        //     printf("Decoding END\n");
-        // } else {
-        //     if (mode == RECEIVING) {
-        //         gdl90_data[needle++] = receive_buffer[0];
-        //         printf("%d\n", receive_buffer[0]); // print hex number
-        //     }
-        // }
     }
            
     return 0;
