@@ -280,8 +280,8 @@ export class DantiDisplay {
                 danti.verticalSpeedTape?.animationDuration(0);
                 if (!KEEP_LAST_VALID_HEADING) {
                     danti.compass.setCompass(0);
+                    danti.compass.magVar(0);
                 }
-                danti.compass.magVar(0);
                 danti.airspeedTape.setAirSpeed(0, AirspeedTape.units.knots);
                 danti.verticalSpeedTape.setVerticalSpeed(0);
                 danti.altitudeTape.setAltitude(0, AltitudeTape.units.ft);
