@@ -13,6 +13,19 @@ all:
 	make dist
 	make help
 
+gdl90:
+	@echo -e "\033[0;32m** Building GDL90 Module... **\033[0m"
+	cd src/danti-connect/gdl90 && make
+	@echo -e "\033[0;32m** Done with building GDL90! **\033[0m"
+	@echo -e "\033[0;32m** - To start the GDL90 receiver, type \033[0mmake run-gdl90-receiver\033[0;32m at the command prompt **\033[0m"
+	@echo -e "\033[0;32m** - To stream sample data to the GDL90 receiver, type \033[0mmake stream-gdl90-data\033[0;32m at the command prompt **\033[0m"
+
+run-gdl90-receiver:
+	cd src/danti-connect/gdl90 && ./gdl90-udp
+
+stream-gdl90-data:
+	node dist/danti-connect/gdl90-source.js
+
 arch:
 	arch -x86_64 zsh
 
@@ -301,4 +314,4 @@ eslint-log:
 eslint-fix:
 	npx eslint --fix 'src/**/*.ts'
 
-.PHONY: dist daa-displays pack
+.PHONY: dist daa-displays pack gdl90
