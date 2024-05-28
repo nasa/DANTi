@@ -219,6 +219,8 @@ export interface TrafficData {
     heading?: { val: string, units: string }, // true heading
     magvar?: { val: string, units: string }, // magnetic variation
     gs: { val: string, units: string }, // true ground speed
+    ias?: { val: string, units: string }, // indicated airspeed
+    tas?: { val: string, units: string } // true airspeed
     vspeed: { val: string, units: string }, // vertical speed
     wow: { val: string, units: string }, // weight on wheels
     time?: string, // current time
@@ -229,8 +231,7 @@ export interface TrafficData {
  * Data received from the avionics of the ownship
  */
 export interface AvionicsData extends TrafficData {
-    ias: { val: string, units: string }, // indicated airspeed
-    tas: { val: string, units: string } // true airspeed
+    // TODO: check if there are additional fields
 }
 export type AircraftData = AvionicsData | TrafficData;
 /**
