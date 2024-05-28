@@ -26,11 +26,13 @@ file=""
 xxd:
 	xxd $(file)
 
-clean:
-	-rm gdl90.*
-	-rm portable_endian.h
+clean: clean-src
 	-rm gdl90-udp
 	-rm gdl90-test
+
+clean-src:
+	-rm gdl90.*
+	-rm portable_endian.h
 	-rm -rf tmp
 	-rm README.md
 
