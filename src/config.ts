@@ -64,10 +64,17 @@ export const MARGIN_TOP: number = 0; // this value can be overridden with the da
 export const MARGIN_LEFT: number = 0; // this value can be overridden with the danti option "left", e.g., see run-danti target in the makefile
 
 // default frames per second, used to smooth the animation of the traffic display
+// set the FPS based on the update rate wanted for the display
+// Example: if data is coming in at a frequency of 1Hz and we want display updates at 8Hz, then FPS = 8
+// To disable animation, set FPS to 0
 export const FPS: number = 8;
 
-// whether the traffic display should interpolate traffic data, e.g., to compensate low display update rates (e.g., 1Hz) and so have a smoother rendering
-export const INTERPOLATE: boolean = true;
+// update frequency of the danti interface
+export const AVIONICS_INTERVAL: number = 125;// ms -- 1000ms = 1Hz, 500ms = 2Hz, 250ms = 4Hz, 200ms = 5Hz, 125ms = 8Hz
+
+// whether the traffic display should interpolate data, e.g., to compensate low display update rates (e.g., 1Hz) and so have a smoother rendering
+// the use of interpolation should be avoided if possible, because it will create a delay in the traffic display
+export const INTERPOLATE_TRAFFIC: boolean = false;
 
 // stale threshold for traffic aircraft, in seconds (0=disabled)
 export const STALE_THRESHOLD: number = 10; // [s]

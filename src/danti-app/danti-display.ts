@@ -48,9 +48,10 @@ import {
     RegisterResponse, RenderRequest, SetFlightPlanRequest, AvionicsData
 } from "./danti-interface";
 import { 
-    INTERPOLATE, KEEP_LAST_VALID_HEADING, ScreenType, THRESHOLD_ALT_SL3, 
+    INTERPOLATE_TRAFFIC,
+	KEEP_LAST_VALID_HEADING, ScreenType, THRESHOLD_ALT_SL3, 
     UPDATE_HEADING_AT_LOW_SPEEDS, USE_MAGHEADING, USE_TCAS_SL3, 
-    VERBOSE_DBG 
+    VERBOSE_DBG
 } from '../config';
 import { TailNumberIndicator } from '../daa-displays/daa-tail-number';
 import { LayeringMode } from '../daa-displays/daa-map-components/leaflet-aircraft';
@@ -75,7 +76,7 @@ export interface DantiData {
 const enable_sound: boolean = false;
 // display padding, used for centering the options and view controls shown at the top/bottom of the danti display
 const PADDING: number = 13; //px
-const UPDATE_FREQUENCY: number = utils.DEFAULT_TRAFFIC_UPDATE_INTERVAL; // in seconds
+// const UPDATE_FREQUENCY: number = utils.DEFAULT_TRAFFIC_UPDATE_INTERVAL; // in seconds
 const ENABLE_FULL_360: boolean = false;
 // const USE_TCAS_SL3: boolean = true;
 // // altitude threshold below which we suppress warning alerts
@@ -91,6 +92,13 @@ export function isWideScreen (screen: ScreenType): boolean {
 export function isUltraWideScreen (screen: ScreenType): boolean {
     return screen === "21:9" || screen === "ultra-widescreen";
 }
+
+// animation duration for the display elements
+export const ANIMATE_TRAFFIC: boolean = true;
+export const TRAFFIC_ANIMATION_DURATION: number = INTERPOLATE_TRAFFIC ? 2 : 0.25; //[s]
+export const ANIMATE_COMPASS: boolean = true;
+export const COMPASS_ANIMATION_DURATION: number = INTERPOLATE_TRAFFIC ? 2 : 0.25; //[s]
+export const SPEED_TAPES_ANIMATION_DURATION: number = INTERPOLATE_TRAFFIC ? 2 : 0.25; //[s]
 
 /**
  * DantiDisplay implements defines the visual appearance and widgets of the Danti display
@@ -122,8 +130,8 @@ export class DantiDisplay {
             engine: "leafletjs",
             trafficTraceVisible: false,
             layeringMode: LayeringMode.byAlertLevel,
-            animate: INTERPOLATE,
-            duration: UPDATE_FREQUENCY
+            animate: ANIMATE_TRAFFIC,
+			duration: TRAFFIC_ANIMATION_DURATION
         });
         // wind indicator
         // const wind: WindIndicator = new WindIndicator("wind", {
@@ -148,8 +156,8 @@ export class DantiDisplay {
             ownshipDiv: ownshipDivName, // the ownship will be rendered above traffic and compass
             maxWedgeAperture: ENABLE_FULL_360 ? 15 : 0, 
             map,
-            animate: INTERPOLATE,
-            duration: UPDATE_FREQUENCY
+            animate: ANIMATE_COMPASS,
+			duration: COMPASS_ANIMATION_DURATION
         });
         // set compass to magnetic heading
         compass.magneticHeading(true);
@@ -187,11 +195,10 @@ export class DantiDisplay {
         const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", { top: 210, left: widescreen ? 1308 : 981 }, { parent: "daa-disp", verticalSpeedRange: 2000, maxWedgeAperture: ENABLE_FULL_360 ? 500 : 0 });
 
         // settings necessary to create a smooth animation
-        const animationDuration: number = INTERPOLATE ? 2 : 0; // s
-        compass?.animationDuration(animationDuration);
-        map?.animationDuration(animationDuration);
-        airspeedTape?.animationDuration(animationDuration);
-        verticalSpeedTape?.animationDuration(animationDuration);
+		compass?.animationDuration(COMPASS_ANIMATION_DURATION);
+		map?.animationDuration(TRAFFIC_ANIMATION_DURATION);
+		airspeedTape?.animationDuration(SPEED_TAPES_ANIMATION_DURATION);
+		verticalSpeedTape?.animationDuration(SPEED_TAPES_ANIMATION_DURATION);
 
         if (opt.toughpad) {
             // adjust position & size, these values are good for 1920x1200
@@ -232,7 +239,7 @@ export class DantiDisplay {
                                 switch (req.type) {
                                     case "render-request": {
                                         const data: DantiData = req.data;
-                                        if (req.data?.avionics) { console.log(`[danti-display] Using avionics data`, { avionics: data.avionics })}
+                                        // if (req.data?.avionics) { console.log(`[danti-display] Using avionics data`, { avionics: data.avionics })}
                                         this.render(data);
                                         break;
                                     }
