@@ -73,7 +73,7 @@ export interface XPlaneAircraft {
 }
 export interface XPlaneData {
     ownship: XPlaneAircraft
-    traffic: XPlaneAircraft[],
+    traffic?: XPlaneAircraft[],
     time?: string,
     error?: string,
     danti?: string,

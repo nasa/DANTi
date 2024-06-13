@@ -84,6 +84,19 @@ export class DantiServer {
 	 * Avionics data from the ownship
 	 */
 	protected avionics: AvionicsData;
+
+	/**
+	 * data available for the DANTi display
+	 * - avionics is used for rendering the display
+	 * - flightData is used by DAIDALUS for computing alerts and maneuver guidance
+	 * - bands stores alerts and maneuver guidance computed by DAIDALUS 
+	 */
+	protected dantiData: DantiData = {
+		avionics: null,
+		flightData: null,
+		bands: null
+	};
+
 	
 	/**
 	 * Debug flag
@@ -323,11 +336,24 @@ export class DantiServer {
 							break;							
 						}
 						case "avionics": {
-							// stores avionics data
+							// stores avionics data and sends a render request to the display
 							const data: AvionicsData = (<AvionicsDataRequest> req).data;
 							if (data) {
-								this.log("[danti-server] Received avionics data", { avionics: data });
+								if (VERBOSE_DBG) { this.log("[danti-server] Received avionics data", { avionics: data }); }
 								this.avionics = data;
+								// send updated avionics data to the display
+								for (let i = 0; i < this.danti?.length; i++) {
+									if (VERBOSE_DBG) { console.log(`** Sending updated avionics data to danti-display #${this.danti[i].id}`); }
+									const req: RenderRequest = {
+										id: this.danti[i].id,
+										type: "render-request",
+										data: {
+											...this.dantiData,
+											avionics: this.avionics
+										}
+									};
+									this.danti[i].wsocket?.send(JSON.stringify(req));
+								}
 							}
 							break;
 						}
@@ -397,28 +423,28 @@ export class DantiServer {
 									const scenario: DAAScenario = JSON.parse(data.lla);
 									const avionics: AvionicsData = this.avionics;
 									const flightData: FlightData = scenario.lla[scenario.steps[0]];
-									const dantiData: DantiData = {
+									this.dantiData = {
 										avionics,
 										flightData,
 										bands
 									};
 									const endTime_decodeResults: number = Date.now();
-									if (VERBOSE_DBG) { this.log("[danti-server] Sending data to danti-display", dantiData); }
-									const startTime_sendBands: number = Date.now();
-									for (let i = 0; i < this.danti?.length; i++) {
-										console.log(`** Sending data to danti-display #${this.danti[i].id}`);
-										const req: RenderRequest = {
-											id: this.danti[i].id,
-											type: "render-request",
-											data: dantiData
-										};
-										this.danti[i].wsocket?.send(JSON.stringify(req));
-									}
-									const endTime_sendBands: number = Date.now();
+									if (VERBOSE_DBG) { this.log("[danti-server] Sending data to danti-display", this.dantiData); }
+									// const startTime_sendBands: number = Date.now();
+									// for (let i = 0; i < this.danti?.length; i++) {
+									// 	console.log(`** Sending data to danti-display #${this.danti[i].id}`);
+									// 	const req: RenderRequest = {
+									// 		id: this.danti[i].id,
+									// 		type: "render-request",
+									// 		data: this.dantiData
+									// 	};
+									// 	this.danti[i].wsocket?.send(JSON.stringify(req));
+									// }
+									// const endTime_sendBands: number = Date.now();
 									if (ENABLE_PROFILER) {
-										this.log("[danti-server] PROFILER", `compute: ${endTime_worker - startTime_worker}ms`);
-										this.log("[danti-server] PROFILER", `decode: ${endTime_decodeResults - startTime_decodeResults}ms`);
-										this.log("[danti-server] PROFILER", `send: ${endTime_sendBands - startTime_sendBands}ms`);
+										this.log("[danti-server] PROFILER", `computeBands: ${endTime_worker - startTime_worker}ms`);
+										this.log("[danti-server] PROFILER", `decodeBands: ${endTime_decodeResults - startTime_decodeResults}ms`);
+										// this.log("[danti-server] PROFILER", `send: ${endTime_sendBands - startTime_sendBands}ms`);
 									}
 								} catch (error) {
 									this.log(`[danti-server] Error while parsing REPL.json`, error);
