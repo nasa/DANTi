@@ -65,9 +65,10 @@ int main(int argc, char* argv[]) {
      */
     if (argc > 1) {
         for (int i = 1; i < argc; i++) {
-            fprintf(stderr, "argv[%d] = %s \n", i, argv[i]);
+            // fprintf(stderr, "argv[%d] = %s \n", i, argv[i]);
             if (strcmp(argv[i], "json") == 0 || strcmp(argv[i], "JSON") == 0) {
                 // enable json output
+				fprintf(stdout, "{ \"info\": \"JSON output enabled\" }\n");
                 JSON_OUTPUT = true;
             }
         }
@@ -86,10 +87,10 @@ int main(int argc, char* argv[]) {
     int socket_desc = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     
     if(socket_desc < 0){
-        printf("Error while creating socket\n");
+        JSON_OUTPUT ? printf("{ \"error\": \"Error while creating socket \"\n") : printf("Error while creating socket\n");
         return -1;
     }
-    printf("Socket created successfully\n");
+    JSON_OUTPUT ? printf("{ \"info\": \"Socket created successfully\" }\n") : printf("Socket created successfully\n");
     
     // Set port and IP:
     struct sockaddr_in server_addr = {
@@ -100,12 +101,13 @@ int main(int argc, char* argv[]) {
     
     // Bind to the set port and IP:
     if(bind(socket_desc, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0){
-        printf("Couldn't bind to the port\n");
+        JSON_OUTPUT ? printf("{ \"error\": \"Couldn't bind to the port\" }\n") : printf("Couldn't bind to the port\n");
         return -1;
     }
-    printf("Done with binding\n");
+    JSON_OUTPUT ? printf("{ \"info\": \"Done with binding\" }\n") : printf("Done with binding\n");
     
-    printf("Listening for incoming UDP messages on port %d...\n\n", GDL90_PORT);
+    JSON_OUTPUT ? printf("{ \"info\": \"Listening for incoming UDP messages on port %d...\" }\n\n", GDL90_PORT)
+		: printf("Listening for incoming UDP messages on port %d...\n\n", GDL90_PORT);
     // Receive client's messages
     int needle = 0;
     while (true) {
@@ -117,6 +119,7 @@ int main(int argc, char* argv[]) {
             .messageId = gdl90_data[1]
         };
         if (DBG_HEX) {
+			if (JSON_OUTPUT) { printf("{ \"hex\": \""); }
             printf("%d %d", gdl90_data[0], gdl90_data[1]);
         }
         int len = 0;
@@ -127,7 +130,8 @@ int main(int argc, char* argv[]) {
             }
             len++;
         }
-        printf("\nReceived GDL90 message (type=%d length=%d)\n", msg.messageId, len);
+		if (JSON_OUTPUT) { printf("\" }\n"); }
+        if (!JSON_OUTPUT) { printf("\nReceived GDL90 message (type=%d length=%d)\n", msg.messageId, len); }
         decode_gdl90_message_ext(&msg);
     }
            

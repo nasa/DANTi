@@ -75,6 +75,9 @@ uint8_t get_gdl90_submsg_id(gdl_message_t *rawMsg);
 bool decode_gdl90_ahrs(gdl_message_t *rawMsg, gdl90_msg_ahrs *ahrsMsg);
 void print_gdl90_ahrs(gdl90_msg_ahrs *decodedMsg);
 void json_gdl90_ahrs(gdl90_msg_ahrs *decodedMsg);
+void json_gdl90_heartbeat(gdl90_msg_heartbeat *decodedMsg);
+void json_gdl90_traffic_report(gdl90_msg_traffic_report_t *decodedMsg);
+void json_gdl90_ownship_geo_altitude(gdl90_msg_ownship_geo_altitude *decodedMsg);
 
 // whether decoded messages are printed in json format
 extern bool JSON_OUTPUT;
