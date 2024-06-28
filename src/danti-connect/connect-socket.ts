@@ -144,12 +144,6 @@ export class SocketConnection extends XPlaneConnection {
     protected timer: NodeJS.Timeout;
 
     /**
-     * Connection to the ATOS
-     */
-    // protected atosConnection: AtosConnection;
-
-
-    /**
      * Utility function, converts ownship data to xplane data
      */
     OwnshipData2XPlaneAircraft (data: AircraftData): XPlaneAircraft {
@@ -216,9 +210,9 @@ export class SocketConnection extends XPlaneConnection {
 			const ID: string = (this.dantiId || "") + "_" + (this.ownshipName || "");
 			const TIMESTAMP: string = today();
 			// the log file is in the form {APPLICATION}_{ID}_{TIMESTAMP}, e.g., DANTi_NASAU01_20221129_133015
-			const ATOS_LOG_FILENAME: string = `${APPLICATION}_${ID}_${TIMESTAMP}.log`;
-			const ATOS_LOG_FILE: string = path.resolve(path.join(this.LOG_DIR, ATOS_LOG_FILENAME));
-			return ATOS_LOG_FILE;
+			const LOG_FILENAME: string = `${APPLICATION}_${ID}_${TIMESTAMP}.log`;
+			const LOG_FILE: string = path.resolve(path.join(this.LOG_DIR, LOG_FILENAME));
+			return LOG_FILE;
 		}
 		return null;
     }
@@ -231,9 +225,9 @@ export class SocketConnection extends XPlaneConnection {
 			const ID: string = (this.dantiId || "") + "_" + (this.ownshipName || "");
 			const TIMESTAMP: string = today();
 			// the log file is in the form {APPLICATION}_{ID}_{TIMESTAMP}, e.g., DANTi_NASAU01_20221129_133015
-			const ATOS_LOG_FILENAME: string = `${APPLICATION}_${ID}_${TIMESTAMP}.err`;
-			const ATOS_LOG_FILE: string = path.resolve(path.join(this.LOG_DIR, ATOS_LOG_FILENAME));
-			return ATOS_LOG_FILE;
+			const LOG_FILENAME: string = `${APPLICATION}_${ID}_${TIMESTAMP}.err`;
+			const LOG_FILE: string = path.resolve(path.join(this.LOG_DIR, LOG_FILENAME));
+			return LOG_FILE;
 		}
 		return null;
     }
