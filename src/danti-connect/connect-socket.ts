@@ -379,7 +379,7 @@ export class SocketConnection extends XPlaneConnection {
     /**
      * Creates socket connections to receive data from the ATOS
      */
-    connectToAtos (): boolean {
+    connectToSocket (): boolean {
         console.log("[connect-socket] Creating sockets for ATOS...");
         // TCP
         this.server.tcp = net.createServer((socket: net.Socket) => {
@@ -611,5 +611,5 @@ const args: string[] = process.argv?.slice(2);
 
 const connection: SocketConnection = new SocketConnection();
 connection.processArgs(args);
-connection.connectToAtos();
+connection.connectToSocket();
 connection.connectToDanti();
