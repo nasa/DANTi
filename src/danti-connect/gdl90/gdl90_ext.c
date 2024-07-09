@@ -34,6 +34,7 @@
 #include "gdl90_ext.h"
 
 bool JSON_OUTPUT = false;
+bool HEX_OUTPUT = false;
 
 void decode_gdl90_message_ext(gdl_message_t *rawMsg) {
     gdl90_msg_device_info deviceInfoMsg;

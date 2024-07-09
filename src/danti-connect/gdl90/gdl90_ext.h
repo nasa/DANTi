@@ -82,4 +82,7 @@ void json_gdl90_ownship_geo_altitude(gdl90_msg_ownship_geo_altitude *decodedMsg)
 // whether decoded messages are printed in json format
 extern bool JSON_OUTPUT;
 
+// whether to print hex data
+extern bool HEX_OUTPUT;
+
 #endif  // GDL90_EXT_H_

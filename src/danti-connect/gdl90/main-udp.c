@@ -54,10 +54,10 @@
 
 #define MAX_GDL90_BUFFER 2000
 #define GDL90_PORT 4000
-#define DBG_HEX true
 
-// external variable defined in gdl90_ext.c
+// external variables defined in gdl90_ext.c
 extern bool JSON_OUTPUT;
+extern bool HEX_OUTPUT;
 
 int main(int argc, char* argv[]) {
     /* 
@@ -68,11 +68,16 @@ int main(int argc, char* argv[]) {
             // fprintf(stderr, "argv[%d] = %s \n", i, argv[i]);
             if (strcmp(argv[i], "json") == 0 || strcmp(argv[i], "JSON") == 0) {
                 // enable json output
-				fprintf(stdout, "{ \"info\": \"JSON output enabled\" }\n");
                 JSON_OUTPUT = true;
+            }
+            if (strcmp(argv[i], "hex") == 0 || strcmp(argv[i], "HEX") == 0) {
+                // enable hex output
+                HEX_OUTPUT = true;
             }
         }
     }
+	if (JSON_OUTPUT) { fprintf(stdout, "{ \"info\": \"JSON output enabled\" }\n"); }
+	if (HEX_OUTPUT) { fprintf(stdout, JSON_OUTPUT ? "{ \"info\": \"HEX output enabled\" }\n" : "HEX output enabled\n"); }
 
     struct sockaddr_in client_addr;
     // allocate receive buffer buffer
@@ -118,19 +123,19 @@ int main(int argc, char* argv[]) {
             .flag0 = gdl90_data[0],
             .messageId = gdl90_data[1]
         };
-        if (DBG_HEX) {
+        if (HEX_OUTPUT) {
 			if (JSON_OUTPUT) { printf("{ \"hex\": \""); }
             printf("%d %d", gdl90_data[0], gdl90_data[1]);
         }
         int len = 0;
         for (int i = 2; i < sizeof(gdl90_data) && gdl90_data[i] != 0x7e; i++) {
             msg.data[len] = gdl90_data[i];
-            if (DBG_HEX) {
+            if (HEX_OUTPUT) {
                 printf(" %d", msg.data[len]); // print byte value
             }
             len++;
         }
-		if (JSON_OUTPUT) { printf("\" }\n"); }
+		if (HEX_OUTPUT && JSON_OUTPUT) { printf("\" }\n"); }
         if (!JSON_OUTPUT) { printf("\nReceived GDL90 message (type=%d length=%d)\n", msg.messageId, len); }
         decode_gdl90_message_ext(&msg);
     }
