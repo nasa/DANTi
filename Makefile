@@ -33,6 +33,7 @@ arch:
 help:
 	@echo -e "\033[0;32m** Use instructions **\033[0m"
 	@echo -e "\033[0;32m - To run DANTi, type \033[0mnpm start\033[0;32m at the command prompt\033[0m"
+	@echo -e "\033[0;32m - To run DANTi and the GDL-90 module, type \033[0mnpm run danti-gdl90\033[0;32m at the command prompt\033[0m"
 	@echo -e "\033[0;32m - To connect X-Plane to DANTi: \033[0mnpm run connect-xplane2danti\033"
 	@echo -e "\033[0;32m - To stream a scenario to X-Plane: \033[0mnpm run stream-scenario2xplane\033"
 	@echo -e "\033[0;32m - To stream a scenario directly to DANTi: \033[0mnpm run stream-scenario2danti\033"
