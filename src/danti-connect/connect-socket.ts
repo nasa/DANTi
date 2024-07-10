@@ -377,10 +377,10 @@ export class SocketConnection extends XPlaneConnection {
     }
 
     /**
-     * Creates socket connections to receive data from the ATOS
+     * Creates socket connections to receive data from the socket
      */
     connectToSocket (): boolean {
-        console.log("[connect-socket] Creating sockets for ATOS...");
+        console.log("[connect-socket] Creating sockets...");
         // TCP
         this.server.tcp = net.createServer((socket: net.Socket) => {
             socket.on('error', (err: Error) => {
