@@ -32,6 +32,8 @@
 
 #include "gdl90.h"
 #include "gdl90_ext.h"
+#include <ctype.h>
+#include <stdio.h>
 
 bool JSON_OUTPUT = false;
 bool HEX_OUTPUT = false;
@@ -78,7 +80,7 @@ void decode_gdl90_message_ext(gdl_message_t *rawMsg) {
 
         case(MSG_ID_OWNSHIP_REPORT):
             decode_gdl90_traffic_report(rawMsg, &trafficReportMsg);
-            JSON_OUTPUT ? json_gdl90_traffic_report(&trafficReportMsg) : print_gdl90_traffic_report(&trafficReportMsg);
+            JSON_OUTPUT ? json_gdl90_ownship_report(&trafficReportMsg) : print_gdl90_traffic_report(&trafficReportMsg);
             break;
 
         case(MSG_ID_OWNSHIP_GEOMETRIC):
@@ -90,6 +92,7 @@ void decode_gdl90_message_ext(gdl_message_t *rawMsg) {
             fprintf(stdout, "Unknown message ID = %d!\n", rawMsg->messageId);
     }
     printf("\n");
+	fflush(stdout);
 }
 
 char utf82char (u_int8_t code) {
@@ -199,10 +202,21 @@ void json_gdl90_heartbeat(gdl90_msg_heartbeat *decodedMsg) {
 
 void json_gdl90_traffic_report(gdl90_msg_traffic_report_t *decodedMsg) {
 	fprintf(stdout, "{ ");
-	fprintf(stdout, "\"type\": \"TRAFFIC_REPORT\"");
+	fprintf(stdout, "\"type\": \"TRAFFIC_REPORT\", ");
+	json_gdl90_traffic_info(decodedMsg);
+	fprintf(stdout, " }\n");
+}
 
+void json_gdl90_ownship_report(gdl90_msg_traffic_report_t *decodedMsg) {
+	fprintf(stdout, "{ ");
+	fprintf(stdout, "\"type\": \"OWNSHIP_REPORT\", ");
+	json_gdl90_traffic_info(decodedMsg);
+	fprintf(stdout, " }\n");
+}
+
+void json_gdl90_traffic_info(gdl90_msg_traffic_report_t *decodedMsg) {
     // Try and replicate the contents in section 3.5.4 of the GDL90 ICD
-	fprintf(stdout, ", \"traffic_alert_status\": ");
+	fprintf(stdout, "\"traffic_alert_status\": ");
     switch(decodedMsg->trafficAlertStatus) {
         case(NO_ALERT): {
 			fprintf(stdout, "\"NO_ALERT\"");
@@ -517,11 +531,12 @@ void json_gdl90_traffic_report(gdl90_msg_traffic_report_t *decodedMsg) {
     }
 
     fprintf(stdout, ", \"tail_number\": \"");
-    for(int i=0; i < GDL90_TRAFFICREPORT_MSG_CALLSIGN_SIZE; i++) {
-        fprintf(stdout, "%c", decodedMsg->callsign[i]);
+    for(int i = 0; i < GDL90_TRAFFICREPORT_MSG_CALLSIGN_SIZE; i++) {
+		if (isprint(decodedMsg->callsign[i])) {
+	        fprintf(stdout, "%c", decodedMsg->callsign[i]);
+		}
     }
     fprintf(stdout, "\"");
-	fprintf(stdout, " }\n");
 }
 
 void json_gdl90_ownship_geo_altitude (gdl90_msg_ownship_geo_altitude *decodedMsg) {

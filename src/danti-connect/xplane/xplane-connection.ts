@@ -402,38 +402,45 @@ export class JavaProcessWorker {
                     : fname;
                 if (opt?.cwd) { console.log(`[xplane-connection] executing: cd ${opt.cwd}`); }
                 console.log(`[xplane-connection] executing: ${processName} ${args.join(" ")}`);
-                const worker: ChildProcess = spawn(processName, args, { cwd: opt?.cwd || "" });
-                this.workers[fname] = worker;
-                worker.stdout.setEncoding("utf8");
-                worker.stderr.setEncoding("utf8");
-                worker.stdout.on("data", (data: string) => {
-                    if (!opt?.waitReady || (data && !this.child_process_ready && /\bready\b/gi.test(data))) {
-                        this.child_process_ready = true;
-                        resolve(data);
-                    }
-                    if (opt?.cb && typeof opt?.cb === "function") {
-                        opt?.cb(data);
-                    }
-                });
-                worker.stderr.on("data", (data: string) => {
-                    console.error(data);
-                    // resolve(false);
-                });
-                worker.on("error", (err: Error) => {
-                    console.error("[process-worker] Process error ", err);
-                    // console.dir(err, { depth: null });
-                });
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                worker.on("exit", (code: number, signal: string) => {
-                    // console.log("[pvs-parser] Process exited with code ", code);
-                    // file parsed successfully
-                    resolve(null);
-                    // console.dir({ code, signal });
-                });
-                worker.on("message", (message) => {
-                    console.log("[process-worker] Process message", message);
-                    // console.dir(message, { depth: null });
-                });
+				try {
+					const worker: ChildProcess = spawn(processName, args, { cwd: opt?.cwd || "" });
+					this.workers[fname] = worker;
+					worker.stdout.setEncoding("utf8");
+					worker.stderr.setEncoding("utf8");
+					worker.stdout.on("data", (data: string) => {
+						if (!opt?.waitReady || (data && !this.child_process_ready && /\bready\b/gi.test(data))) {
+							this.child_process_ready = true;
+							resolve(data);
+						}
+						if (opt?.cb && typeof opt?.cb === "function") {
+							opt?.cb(data);
+						}
+					});
+					worker.stderr.on("data", (data: string) => {
+						console.error(data);
+						// resolve(false);
+					});
+					worker.on("spawn", () => {
+						console.error("[process-worker] Process spawned successfully!");
+					});
+					worker.on("error", (err: Error) => {
+						console.error("[process-worker] Process error ", err);
+						// console.dir(err, { depth: null });
+					});
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
+					worker.on("exit", (code: number, signal: string) => {
+						// console.log("[pvs-parser] Process exited with code ", code);
+						// file parsed successfully
+						resolve(null);
+						// console.dir({ code, signal });
+					});
+					worker.on("message", (message) => {
+						console.log("[process-worker] Process message", message);
+						// console.dir(message, { depth: null });
+					});
+				} catch (err) {
+					console.error(`[process-worker] Error while spawning ${processName} ${args.join(" ")}`, err);
+				}
             });
         }
         return null;

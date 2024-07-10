@@ -149,6 +149,7 @@ copy:
 	rsync -a $(submodules)/daa-displays/dist/daa-config dist/
 	rsync src/*.html dist/
 	rsync -a src/danti-connect/xplane/dist dist/danti-connect/xplane
+	rsync -a src/danti-connect/gdl90/gdl90-udp dist/danti-connect/gdl90
 	rsync node_modules/leaflet/dist/leaflet.js ./dist
 	@if [ ! -e "dist/node_modules" ]; then \
 		cd dist && ln -s ../node_modules node_modules; \

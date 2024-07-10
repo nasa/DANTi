@@ -113,6 +113,9 @@ int main(int argc, char* argv[]) {
     
     JSON_OUTPUT ? printf("{ \"info\": \"Listening for incoming UDP messages on port %d...\" }\n\n", GDL90_PORT)
 		: printf("Listening for incoming UDP messages on port %d...\n\n", GDL90_PORT);
+	// flush stdout
+	fflush(stdout);
+
     // Receive client's messages
     int needle = 0;
     while (true) {

@@ -77,6 +77,8 @@ void print_gdl90_ahrs(gdl90_msg_ahrs *decodedMsg);
 void json_gdl90_ahrs(gdl90_msg_ahrs *decodedMsg);
 void json_gdl90_heartbeat(gdl90_msg_heartbeat *decodedMsg);
 void json_gdl90_traffic_report(gdl90_msg_traffic_report_t *decodedMsg);
+void json_gdl90_traffic_info(gdl90_msg_traffic_report_t *decodedMsg);
+void json_gdl90_ownship_report(gdl90_msg_traffic_report_t *decodedMsg);
 void json_gdl90_ownship_geo_altitude(gdl90_msg_ownship_geo_altitude *decodedMsg);
 
 // whether decoded messages are printed in json format
