@@ -10,6 +10,7 @@ all:
 	make install
 	make daa-displays
 	make xplane
+	make gdl90
 	make dist
 	make help
 
@@ -136,6 +137,9 @@ copy:
 	fi
 	@if [ ! -e "dist/daa-scenarios" ]; then \
 		mkdir dist/daa-scenarios; \
+	fi
+	@if [ ! -e "dist/danti-connect/gdl90" ]; then \
+		mkdir -p dist/danti-connect/gdl90; \
 	fi
 	# copying files
 	rsync -a src/daa-displays/svgs dist/daa-displays/

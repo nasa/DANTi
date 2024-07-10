@@ -175,9 +175,10 @@ export class SocketConnection extends XPlaneConnection {
 		if (msg) {
 			switch (msg.type) {
 				case "OWNSHIP_REPORT": {
+                    const tail_number: string = msg.tail_number || "Ownship";
 					this.avionicsData = {
 						...this.avionicsData,
-						name: msg.tail_number, // tail number
+						name: tail_number, // tail number
 						lat: { val: msg.latitude, units: "deg" }, // latitude
 						lon: { val: msg.longitude, units: "deg" }, // longitude
 						alt: { val: msg.pressure_altitude.val, units: msg.pressure_altitude.units }, // altitude
@@ -187,6 +188,7 @@ export class SocketConnection extends XPlaneConnection {
 						wow: { val: `${msg.airborne ? 0 : 1}`, units: "N/A" } // weight on wheels
 					};
 					this.validAvionicsData = (msg.track_or_heading && msg.track_or_heading?.type !== "INVALID");
+                    this.setOwnshipName(tail_number);
 					if (DBG) {
 						console.log({ avionicsData: this.avionicsData, validAvionicsData: this.validAvionicsData });
 					}

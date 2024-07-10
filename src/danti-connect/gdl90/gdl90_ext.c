@@ -73,23 +73,25 @@ void decode_gdl90_message_ext(gdl_message_t *rawMsg) {
             JSON_OUTPUT ? json_gdl90_heartbeat(&heartbeatMsg) : print_gdl90_heartbeat(&heartbeatMsg);
             break;
 		}
-        case(MSG_ID_TRAFFIC_REPORT):
+        case(MSG_ID_TRAFFIC_REPORT): {
             decode_gdl90_traffic_report(rawMsg, &trafficReportMsg);
             JSON_OUTPUT ? json_gdl90_traffic_report(&trafficReportMsg) : print_gdl90_traffic_report(&trafficReportMsg);
             break;
-
-        case(MSG_ID_OWNSHIP_REPORT):
+		}
+        case(MSG_ID_OWNSHIP_REPORT): {
             decode_gdl90_traffic_report(rawMsg, &trafficReportMsg);
             JSON_OUTPUT ? json_gdl90_ownship_report(&trafficReportMsg) : print_gdl90_traffic_report(&trafficReportMsg);
             break;
-
-        case(MSG_ID_OWNSHIP_GEOMETRIC):
+		}
+        case(MSG_ID_OWNSHIP_GEOMETRIC): {
             decode_gdl90_ownship_geo_altitude(rawMsg, &ownshipGeoAltitude);
             JSON_OUTPUT ? json_gdl90_ownship_geo_altitude(&ownshipGeoAltitude) : print_gdl90_ownship_geo_altitude(&ownshipGeoAltitude);
             break;
-
-        default:
-            fprintf(stdout, "Unknown message ID = %d!\n", rawMsg->messageId);
+		}
+        default: {
+            JSON_OUTPUT ? fprintf(stdout, "{ \"info\": \"Unknown message ID = %d!\" }", rawMsg->messageId) : fprintf(stdout, "Unknown message ID = %d!\n", rawMsg->messageId);
+			break;
+		}
     }
     printf("\n");
 	fflush(stdout);
