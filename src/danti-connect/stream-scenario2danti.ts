@@ -46,7 +46,7 @@ if (loop) { console.log(">> Loop = true <<"); }
 // the added frames are marked with a flag "animation-frame" so we can recognize these additional frames in the case we want to handle them differently
 const animate: boolean = argv.includes("animate");
 
-// simulation speed, e.g., 1x (real-time), 2x (fast-time), 0.5x (slow-time)
+// simulation speed, e.g., 1 (real-time), 2 (fast-time), 0.5 (slow-time)
 // slow-time is useful for slow machine that are unable to keep up with the rendering
 const speed: number = 
     argv.includes("speed") && (argv.indexOf("speed") + 1 < argv.length) ? 
@@ -109,6 +109,7 @@ const playFile = async (fname: string, opt?: { loop?: boolean }) => {
         // start playback
         const ownshipName: string = selected_series.ownship[0].name;
         console.log(`[stream-scenario2danti] Ownship name: ${ownshipName}`);
+		// start playback
         danti.play({ ...selected_series.daa, ownshipName }, {
             interval, stats, ...opt
         });
