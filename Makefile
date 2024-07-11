@@ -33,7 +33,7 @@ arch:
 help:
 	@echo -e "\033[0;32m** Use instructions **\033[0m"
 	@echo -e "\033[0;32m - To run DANTi, type \033[0mnpm start\033[0;32m at the command prompt\033[0m"
-	@echo -e "\033[0;32m - To run DANTi and the GDL-90 module, type \033[0mnpm run danti-gdl90\033[0;32m at the command prompt\033[0m"
+	@echo -e "\033[0;32m - To run DANTi with GDL-90, type \033[0mnpm run danti-gdl90\033[0;32m at the command prompt\033[0m"
 	@echo -e "\033[0;32m - To connect X-Plane to DANTi: \033[0mnpm run connect-xplane2danti\033"
 	@echo -e "\033[0;32m - To stream a scenario to X-Plane: \033[0mnpm run stream-scenario2xplane\033"
 	@echo -e "\033[0;32m - To stream a scenario directly to DANTi: \033[0mnpm run stream-scenario2danti\033"
@@ -70,27 +70,6 @@ xplane:
 		mkdir dist/danti-connect/xplane; \
 	fi
 	-rsync -a src/danti-connect/xplane/dist dist/danti-connect/xplane
-
-testbed:
-	cd src/danti-connect/testbed && make
-	@if [ ! -e "dist/danti-connect/testbed" ]; then \
-		mkdir dist/danti-connect/testbed; \
-	fi
-	@if [ ! -e "dist/danti-connect/testbed/x86_64.win64" ]; then \
-		mkdir dist/danti-connect/testbed/x86_64.win64; \
-	fi
-	@if [ ! -e "dist/danti-connect/testbed/x86_64.win64/DantiDccmClient" ]; then \
-		mkdir dist/danti-connect/testbed/x86_64.win64/DantiDccmClient; \
-	fi
-	@if [ ! -e "dist/danti-connect/testbed/x86_64.win64/DantiSmartNasCommClient" ]; then \
-		mkdir dist/danti-connect/testbed/x86_64.win64/DantiSmartNasCommClient; \
-	fi
-	@if [ ! -e "dist/danti-connect/testbed/x86_64.win64/DantiSmartNasCommClient/dist" ]; then \
-		mkdir dist/danti-connect/testbed/x86_64.win64/DantiSmartNasCommClient/dist; \
-	fi
-	-rsync -a src/danti-connect/testbed/x86_64.win64/DantiDccmClient/dist/*.jar dist/danti-connect/testbed/x86_64.win64/DantiDccmClient
-	-rsync -a src/danti-connect/testbed/x86_64.win64/DantiSmartNasCommClient/dist/*.jar dist/danti-connect/testbed/x86_64.win64/DantiSmartNasCommClient/dist
-	-rsync -a src/danti-connect/testbed/x86_64.win64/scripts dist/danti-connect/testbed/x86_64.win64/
 
 daa-displays:
 	@echo -e "\033[0;32m** Making daa-displays submodule **\033[0m"
@@ -248,11 +227,6 @@ stream-scenario2xplane-la:
 run-danti:
 	npm run danti
 
-# examples:
-#   make connect-testbed2danti
-connect-testbed2danti:
-	node dist/danti-connect/connect-testbed2danti.js
-
 # xplane is always on localhost
 # danti is on localhost by default
 # examples:
@@ -298,7 +272,6 @@ clean:
 	-rm -rf dist
 	-cd src/danti-utils && rm *.class
 	-cd src/danti-connect/xplane && make clean
-	-cd src/danti-connect/testbed && make clean
 	@echo -e "\033[0;32m** Done with cleaning! **\033[0m"
 
 ls-scenarios:
