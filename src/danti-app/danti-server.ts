@@ -431,15 +431,15 @@ export class DantiServer {
 									const endTime_decodeResults: number = Date.now();
 									if (VERBOSE_DBG) { this.log("[danti-server] Sending data to danti-display", this.dantiData); }
 									// const startTime_sendBands: number = Date.now();
-									// for (let i = 0; i < this.danti?.length; i++) {
-									// 	console.log(`** Sending data to danti-display #${this.danti[i].id}`);
-									// 	const req: RenderRequest = {
-									// 		id: this.danti[i].id,
-									// 		type: "render-request",
-									// 		data: this.dantiData
-									// 	};
-									// 	this.danti[i].wsocket?.send(JSON.stringify(req));
-									// }
+									for (let i = 0; i < this.danti?.length; i++) {
+										console.log(`** Sending data to danti-display #${this.danti[i].id}`);
+										const req: RenderRequest = {
+											id: this.danti[i].id,
+											type: "render-request",
+											data: this.dantiData
+										};
+										this.danti[i].wsocket?.send(JSON.stringify(req));
+									}
 									// const endTime_sendBands: number = Date.now();
 									if (ENABLE_PROFILER) {
 										this.log("[danti-server] PROFILER", `computeBands: ${endTime_worker - startTime_worker}ms`);
