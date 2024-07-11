@@ -315,11 +315,10 @@ export class DantiDisplay {
                     danti.verticalSpeedTape?.animationDuration(0);
                 } else {
                     // settings necessary to create a smooth animation
-                    const animationDuration: number = 2; // s
-                    danti.compass?.animationDuration(animationDuration);
-                    danti.map?.animationDuration(animationDuration);
-                    danti.airspeedTape?.animationDuration(animationDuration);
-                    danti.verticalSpeedTape?.animationDuration(animationDuration);
+					danti.compass?.animationDuration(COMPASS_ANIMATION_DURATION);
+					danti.map?.animationDuration(TRAFFIC_ANIMATION_DURATION);
+					danti.airspeedTape?.animationDuration(SPEED_TAPES_ANIMATION_DURATION);
+					danti.verticalSpeedTape?.animationDuration(SPEED_TAPES_ANIMATION_DURATION);
                 }
                 if (bands && !bands.Ownship) { console.warn("Warning: using ground-based data for the ownship"); }
 
