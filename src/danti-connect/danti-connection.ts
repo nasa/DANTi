@@ -310,11 +310,10 @@ export class DantiConnection implements DantiDataSourceInterface {
             }
         }).then(async (success: boolean) => {
             if (success) {
+				console.log(`[danti-connection] starting scenario playback...`);
                 // send labels and units
                 daaDataSource.sendLabels(desc.labels);
                 daaDataSource.sendUnits(desc.units);
-                // send ownship name
-                // daaStreamer.sendOwnshipName(desc.ownshipName);
                 // send flight data and bands to danti-app
                 const data: string[] = desc.content;
                 let i: number = 0;
@@ -352,7 +351,9 @@ export class DantiConnection implements DantiDataSourceInterface {
                     // to indicate that all relevant data has been sent
                     await daaDataSource.notifyEpochEnd(epoch++);
                 }, interval);
-            }
+            } else {
+				console.log(`[danti-connection] failed to start scenario playback :/`);
+			}
         });
     }
 }
