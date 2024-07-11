@@ -278,7 +278,7 @@ export class DantiDisplay {
             if (flightData.ownship.id === "--") {
                 // reset display -- ownship has not been assigned yet
                 this.lastTailNumber = flightData.ownship.id;
-                danti.tailNumber.setTailNumber(flightData.ownship.id);
+                danti.tailNumber?.setTailNumber(flightData.ownship.id);
                 danti.map?.resetAirspace();
                 danti.map?.removeGeoFence();
                 danti.compass?.animationDuration(0);
@@ -289,9 +289,9 @@ export class DantiDisplay {
                     danti.compass.setCompass(0);
                     danti.compass.magVar(0);
                 }
-                danti.airspeedTape.setAirSpeed(0, AirspeedTape.units.knots);
-                danti.verticalSpeedTape.setVerticalSpeed(0);
-                danti.altitudeTape.setAltitude(0, AltitudeTape.units.ft);
+                danti.airspeedTape?.setAirSpeed(0, AirspeedTape.units.knots);
+                danti.verticalSpeedTape?.setVerticalSpeed(0);
+                danti.altitudeTape?.setAltitude(0, AltitudeTape.units.ft);
             } else {
                 const magvar: number = USE_MAGHEADING && isFinite(+data.avionics?.magvar?.val) ? +data.avionics.magvar.val : 0;
                 const bands: ScenarioDataPoint = data.bands;
@@ -302,9 +302,9 @@ export class DantiDisplay {
                 const lon : number = isFinite(+data?.avionics?.lon?.val) ? +data.avionics.lon.val : +flightData.ownship.s.lon;
                 const alt : number = isFinite(+data?.avionics?.alt?.val) ? +data.avionics.alt.val : +flightData.ownship.s.alt;
                 const pos: LatLonAlt<number> = { lat, lon, alt };
-                danti.map.setPosition(pos);
+                danti.map?.setPosition(pos);
                 // set tail number
-                danti.tailNumber.setTailNumber(flightData.ownship.id);
+                danti.tailNumber?.setTailNumber(flightData.ownship.id);
                 if (this.lastTailNumber !== flightData.ownship.id) {
                     // update last tail number and remove all traffic rendered on the display
                     this.lastTailNumber = flightData.ownship.id;
@@ -333,10 +333,10 @@ export class DantiDisplay {
                     danti.compass.setCompass(heading);
                     danti.compass.magVar(magvar);
                 }
-                danti.airspeedTape.setAirSpeed(airspeed, AirspeedTape.units.knots);
-                danti.verticalSpeedTape.setVerticalSpeed(vspeed);
+                danti.airspeedTape?.setAirSpeed(airspeed, AirspeedTape.units.knots);
+                danti.verticalSpeedTape?.setVerticalSpeed(vspeed);
                 // the current version of the altitude tape does not support negative altitudes
-                danti.altitudeTape.setAltitude(alt > 0 ? alt : 0, AltitudeTape.units.ft);
+                danti.altitudeTape?.setAltitude(alt > 0 ? alt : 0, AltitudeTape.units.ft);
 
                 // flag indicating whether we are mimicking TCAS suppression of warning alerts below a certain altitude
                 const force_caution: boolean = alt < THRESHOLD_ALT_SL3 && USE_TCAS_SL3;
@@ -364,12 +364,12 @@ export class DantiDisplay {
                 // console.log(`Flight data`, flightData);
                 if (bands) {
                     const compassBands: Bands = utils.bandElement2Bands(bands["Heading Bands"]);
-                    danti.compass.setBands(compassBands);
+                    danti.compass?.setBands(compassBands);
                     const airspeedBands: Bands = utils.bandElement2Bands(bands["Horizontal Speed Bands"]);
-                    danti.airspeedTape.setBands(airspeedBands, AirspeedTape.units.knots);
+                    danti.airspeedTape?.setBands(airspeedBands, AirspeedTape.units.knots);
                     // DANTi should display either vspeed bands or altitude bands, not both of them -- we choose to show vspeed bands
                     const vspeedBands: Bands = utils.bandElement2Bands(bands["Vertical Speed Bands"]);
-                    danti.verticalSpeedTape.setBands(vspeedBands);
+                    danti.verticalSpeedTape?.setBands(vspeedBands);
                     // const altitudeBands: Bands = utils.bandElement2Bands(bands["Altitude Bands"]);
                     // danti.altitudeTape.setBands(altitudeBands, AltitudeTape.units.ft);
 
@@ -378,22 +378,22 @@ export class DantiDisplay {
                     // set resolutions
                     // show wedge only for recovery bands
                     if (compassBands?.RECOVERY || (wedgePersistenceEnabled && max_alert > 2)) {
-                        danti.compass.setBug(bands["Horizontal Direction Resolution"], {
+                        danti.compass?.setBug(bands["Horizontal Direction Resolution"], {
                             wedgeConstraints: compassBands.RECOVERY,
                             resolutionBugColor: utils.bugColors["RECOVERY"] // "green"
                         });
                     } else {
-                        danti.compass.setBug(bands["Horizontal Direction Resolution"], {
+                        danti.compass?.setBug(bands["Horizontal Direction Resolution"], {
                             wedgeAperture: 0
                         });
                     }
                     if (airspeedBands?.RECOVERY || (wedgePersistenceEnabled && max_alert > 2)) {
-                        danti.airspeedTape.setBug(bands["Horizontal Speed Resolution"], {
+                        danti.airspeedTape?.setBug(bands["Horizontal Speed Resolution"], {
                             wedgeConstraints: airspeedBands.RECOVERY,
                             resolutionBugColor: utils.bugColors["RECOVERY"] // "green"
                         });
                     } else {
-                        danti.airspeedTape.setBug(bands["Horizontal Speed Resolution"], {
+                        danti.airspeedTape?.setBug(bands["Horizontal Speed Resolution"], {
                             wedgeAperture: 0
                         });
                     }
@@ -408,12 +408,12 @@ export class DantiDisplay {
                     //     });
                     // }
                     if (vspeedBands?.RECOVERY || (wedgePersistenceEnabled && max_alert > 2)) {
-                        danti.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"], {
+                        danti.verticalSpeedTape?.setBug(bands["Vertical Speed Resolution"], {
                             wedgeConstraints: vspeedBands.RECOVERY,
                             resolutionBugColor: utils.bugColors["RECOVERY"] // "green"
                         });
                     } else {
-                        danti.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"], {
+                        danti.verticalSpeedTape?.setBug(bands["Vertical Speed Resolution"], {
                             wedgeAperture: 0
                         });
                     }
@@ -431,7 +431,7 @@ export class DantiDisplay {
                                         bottom: +perimeter[0].alt - 20
                                     }
                                     // add geofence to the map
-                                    danti.map.addContour(`${bands.Contours.data[i].ac}-${i}-${j}`, perimeter, floor, {
+                                    danti.map?.addContour(`${bands.Contours.data[i].ac}-${i}-${j}`, perimeter, floor, {
                                         showLabel: false
                                     });
                                 }
@@ -451,7 +451,7 @@ export class DantiDisplay {
                                         bottom: +perimeter[0].alt - 20
                                     }
                                     // add geofence to the map
-                                    danti.map.addProtectedArea(`${bands["Hazard Zones"].data[i].ac}-${i}-${j}`, perimeter, floor, {
+                                    danti.map?.addProtectedArea(`${bands["Hazard Zones"].data[i].ac}-${i}-${j}`, perimeter, floor, {
                                         showLabel: false
                                     });
                                 }
