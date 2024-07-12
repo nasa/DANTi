@@ -48,6 +48,7 @@ import {
     RegisterResponse, RenderRequest, SetFlightPlanRequest, AvionicsData
 } from "./danti-interface";
 import { 
+	AVIONICS_INTERVAL,
     INTERPOLATE_TRAFFIC,
 	KEEP_LAST_VALID_HEADING, ScreenType, THRESHOLD_ALT_SL3, 
     UPDATE_HEADING_AT_LOW_SPEEDS, USE_MAGHEADING, USE_TCAS_SL3, 
@@ -93,13 +94,6 @@ export function isUltraWideScreen (screen: ScreenType): boolean {
     return screen === "21:9" || screen === "ultra-widescreen";
 }
 
-// animation duration for the display elements
-export const ANIMATE_TRAFFIC: boolean = true;
-export const TRAFFIC_ANIMATION_DURATION: number = INTERPOLATE_TRAFFIC ? 2 : 0.25; //[s]
-export const ANIMATE_COMPASS: boolean = true;
-export const COMPASS_ANIMATION_DURATION: number = INTERPOLATE_TRAFFIC ? 2 : 0.25; //[s]
-export const SPEED_TAPES_ANIMATION_DURATION: number = INTERPOLATE_TRAFFIC ? 2 : 0.25; //[s]
-
 /**
  * DantiDisplay implements defines the visual appearance and widgets of the Danti display
  */
@@ -108,12 +102,21 @@ export class DantiDisplay {
     protected client: DantiClient;
     protected lastTailNumber: string = "";
 
+	// animation duration for the display elements
+	protected ANIMATE_TRAFFIC: boolean = true;
+	protected TRAFFIC_ANIMATION_DURATION: number = INTERPOLATE_TRAFFIC ? 2 : AVIONICS_INTERVAL / 1000; //[s]
+	protected ANIMATE_COMPASS: boolean = true;
+	protected COMPASS_ANIMATION_DURATION: number = INTERPOLATE_TRAFFIC ? 2 : AVIONICS_INTERVAL / 1000; //[s]
+	protected SPEED_TAPES_ANIMATION_DURATION: number = INTERPOLATE_TRAFFIC ? 2 : AVIONICS_INTERVAL / 1000; //[s]
+
     /**
      * Constructor
      * @param opt.parent ID of the DOM element where the display will be rendered
      * @param opt.toughpad whether the display will be rendered on a toughpad
+     * @param opt.screen screen type, one of "21:9" | "ultra-widescreen" | "16:9" | "widescreen" | "4:3" | "standard"
+	 * @param opt.updateFrequency display update frequency, in seconds
      */
-    constructor (opt?: { parent?: string, toughpad?: boolean, screen?: ScreenType }) {
+    constructor (opt?: { parent?: string, toughpad?: boolean, screen?: ScreenType, updateFrequency?: number }) {
         opt = opt || {};
         opt.screen = opt.screen || "16:9"; // default screen type is widescreen
         const parent: string = opt?.parent || "daa-disp";
@@ -130,8 +133,8 @@ export class DantiDisplay {
             engine: "leafletjs",
             trafficTraceVisible: false,
             layeringMode: LayeringMode.byAlertLevel,
-            animate: ANIMATE_TRAFFIC,
-			duration: TRAFFIC_ANIMATION_DURATION
+            animate: this.ANIMATE_TRAFFIC,
+			duration: this.TRAFFIC_ANIMATION_DURATION
         });
         // wind indicator
         // const wind: WindIndicator = new WindIndicator("wind", {
@@ -156,8 +159,8 @@ export class DantiDisplay {
             ownshipDiv: ownshipDivName, // the ownship will be rendered above traffic and compass
             maxWedgeAperture: ENABLE_FULL_360 ? 15 : 0, 
             map,
-            animate: ANIMATE_COMPASS,
-			duration: COMPASS_ANIMATION_DURATION
+            animate: this.ANIMATE_COMPASS,
+			duration: this.COMPASS_ANIMATION_DURATION
         });
         // set compass to magnetic heading
         compass.magneticHeading(true);
@@ -195,10 +198,10 @@ export class DantiDisplay {
         const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", { top: 210, left: widescreen ? 1308 : 981 }, { parent: "daa-disp", verticalSpeedRange: 2000, maxWedgeAperture: ENABLE_FULL_360 ? 500 : 0 });
 
         // settings necessary to create a smooth animation
-		compass?.animationDuration(COMPASS_ANIMATION_DURATION);
-		map?.animationDuration(TRAFFIC_ANIMATION_DURATION);
-		airspeedTape?.animationDuration(SPEED_TAPES_ANIMATION_DURATION);
-		verticalSpeedTape?.animationDuration(SPEED_TAPES_ANIMATION_DURATION);
+		compass?.animationDuration(this.COMPASS_ANIMATION_DURATION);
+		map?.animationDuration(this.TRAFFIC_ANIMATION_DURATION);
+		airspeedTape?.animationDuration(this.SPEED_TAPES_ANIMATION_DURATION);
+		verticalSpeedTape?.animationDuration(this.SPEED_TAPES_ANIMATION_DURATION);
 
         if (opt.toughpad) {
             // adjust position & size, these values are good for 1920x1200
@@ -315,10 +318,10 @@ export class DantiDisplay {
                     danti.verticalSpeedTape?.animationDuration(0);
                 } else {
                     // settings necessary to create a smooth animation
-					danti.compass?.animationDuration(COMPASS_ANIMATION_DURATION);
-					danti.map?.animationDuration(TRAFFIC_ANIMATION_DURATION);
-					danti.airspeedTape?.animationDuration(SPEED_TAPES_ANIMATION_DURATION);
-					danti.verticalSpeedTape?.animationDuration(SPEED_TAPES_ANIMATION_DURATION);
+					danti.compass?.animationDuration(this.COMPASS_ANIMATION_DURATION);
+					danti.map?.animationDuration(this.TRAFFIC_ANIMATION_DURATION);
+					danti.airspeedTape?.animationDuration(this.SPEED_TAPES_ANIMATION_DURATION);
+					danti.verticalSpeedTape?.animationDuration(this.SPEED_TAPES_ANIMATION_DURATION);
                 }
                 if (bands && !bands.Ownship) { console.warn("Warning: using ground-based data for the ownship"); }
 
