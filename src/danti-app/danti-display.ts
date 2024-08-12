@@ -104,7 +104,7 @@ export class DantiDisplay {
 
 	// animation duration for the display elements
 	protected ANIMATE_TRAFFIC: boolean = true;
-	protected TRAFFIC_ANIMATION_DURATION: number = INTERPOLATE_TRAFFIC ? 2 : AVIONICS_INTERVAL / 1000; //[s]
+	protected TRAFFIC_ANIMATION_DURATION: number = 2; //[s] NOTE: traffic updates are always at 1Hz. We use 2 seconds animation here to make the animation smoother (1 sec animation creates a small jump between animation steps when the animation starts/ends)
 	protected ANIMATE_COMPASS: boolean = true;
 	protected COMPASS_ANIMATION_DURATION: number = INTERPOLATE_TRAFFIC ? 2 : AVIONICS_INTERVAL / 1000; //[s]
 	protected SPEED_TAPES_ANIMATION_DURATION: number = INTERPOLATE_TRAFFIC ? 2 : AVIONICS_INTERVAL / 1000; //[s]
@@ -326,7 +326,10 @@ export class DantiDisplay {
                 if (bands && !bands.Ownship) { console.warn("Warning: using ground-based data for the ownship"); }
 
                 // try to use avionics data if they are available, they will provide magnetic heading, true airspeed, and vertical speed
-                const heading: number = isFinite(+bands?.Ownship?.acstate?.heading?.val) ? +bands.Ownship.acstate.heading.val : Compass.v2deg(data.flightData.ownship.v);
+				const daidalus_hdg: number = isFinite(+bands?.Ownship?.acstate?.heading?.val) ? +bands.Ownship.acstate.heading.val : Compass.v2deg(data.flightData.ownship.v);
+                const heading: number = isFinite(+data.avionics?.heading?.val) ? +data.avionics?.heading?.val // use avionics data if they are valid
+					: isFinite(daidalus_hdg) ? daidalus_hdg // otherwise use heading data from daidalus if they are valid
+					: danti.compass.getHeading(); // otherwise keep current heading
                 const airspeed: number = isFinite(+data.avionics?.tas?.val) ? +data.avionics.tas.val
                     : isFinite(+bands?.Ownship?.acstate?.airspeed?.val) ? +bands.Ownship.acstate.airspeed.val : AirspeedTape.v2gs(data.flightData.ownship.v);
                 const vspeed: number = isFinite(+data.avionics?.vspeed?.val) ? +data.avionics.vspeed.val
