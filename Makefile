@@ -263,6 +263,11 @@ send:
 		node dist/danti-connect/send-config.js $(config); \
 	fi
 
+ownship=N858MH
+solo=false
+convert-csv:
+	node dist/danti-utils/convert-csv2daa.js $(file) $(ownship) $(solo)
+
 audit:
 	-npm audit fix
 

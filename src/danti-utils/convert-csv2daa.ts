@@ -427,14 +427,14 @@ export function csv2daa (fname: string, ownship: string, opt?: { soloFlight: boo
 // utility function, prints information on how to use the converter
 export function help (): string {
     return `Usage:
-node convert-csv2daa <file.csv>`;
+node convert-csv2daa <file.csv> ownship=N858MH solo=false`;
 }
 
 // get args from command line
 const args: string[] = process.argv?.slice(2);
 console.log('args: ', args);
-const ownship: string = "N858MH";
-const soloFlight: boolean = false;
+const ownship: string = args?.length > 1 && args[1] ? args[1] : "N858MH";
+const soloFlight: boolean = args?.length > 2 && args[2] ? args[2] === "true" : false;
 // TODO: add command line options for the following functions:
 // - list ac names
 // - select ownship name (this will put constraints on the timestamp range)
