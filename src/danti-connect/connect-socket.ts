@@ -311,7 +311,10 @@ export class SocketConnection extends XPlaneConnection {
     /**
      * Utility function, sets a new ownship name
      */
-    setOwnshipName (name: string): boolean {
+    setOwnshipName (name: string, opt?: { printSettings?: boolean }): boolean {
+		opt = opt || {};
+		// unless otherwise specified, print settings is true
+		opt.printSettings = opt.printSettings === null || opt.printSettings === undefined ? true : opt.printSettings;
         if (name) {
             const oldName: string = this.ownshipName;
             if (oldName !== name) {
@@ -323,8 +326,10 @@ export class SocketConnection extends XPlaneConnection {
                 // create a new log file every time a new ownship is used
                 this.logFile = newLogFile;
                 this.errFile = newErrorFile;
-                // print settings
-                this.printSettings();
+				if (opt?.printSettings) {
+					// print settings
+					this.printSettings();
+				}
                 return true;
             }
         }
@@ -485,7 +490,7 @@ export class SocketConnection extends XPlaneConnection {
                     const data: string[] = args[i].split(":");
                     if (data?.length === 2) {
                         this.initializeDantiId(data[0]);
-                        this.setOwnshipName(data[1]);
+                        this.setOwnshipName(data[1], { printSettings: false });
                         console.log("danti ID = " + this.dantiId);
                         console.log("ownship name = " + this.ownshipName);
                     } else {
@@ -513,12 +518,20 @@ export class SocketConnection extends XPlaneConnection {
 				i++;
 				if (i < args.length) {
 					this.LOG_DIR = path.resolve(args[i]);
-					console.log("danti log = " + this.LOG_DIR);
+					// update log file names
+					if (this.LOG_DIR) {
+						this.logFile = this.getLogFilePath();
+						this.errFile = this.getErrorFilePath();	
+					}
+					console.log("danti log folder: " + this.LOG_DIR);
+					this.log(`danti log file: ${this.logFile}`);
+					this.log(`danti err file: ${this.errFile}`);		
 				} else {
 					console.warn(`[connect-socket] Warning: logdir option used by folder name not provided`);
 				}
             }
         }
+		this.printSettings();
     }
 
     /**
