@@ -268,6 +268,9 @@ solo=false
 convert-csv:
 	node dist/danti-utils/convert-csv2daa.js $(file) $(ownship) $(solo)
 
+fix-daa:
+	node dist/danti-utils/fix-daa.js $(file) $(ownship) $(solo)
+
 audit:
 	-npm audit fix
 
