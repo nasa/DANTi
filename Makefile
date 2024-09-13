@@ -73,8 +73,8 @@ xplane:
 
 daa-displays:
 	@echo -e "\033[0;32m** Making daa-displays submodule **\033[0m"
-	git submodule update --init --remote
-	@echo -e "\033[0;32m** Done with cloning daa-displays! **\033[0m"
+	# git submodule update --init --remote
+	# @echo -e "\033[0;32m** Done with cloning daa-displays! **\033[0m"
 	@echo -e "\033[0;32m** Building daa-displays **\033[0m"
 	@cd $(submodules)/daa-displays && make -e daidalus-releases=v$(DAIDALUS_VERSION) -e only-danti=y
 	@echo -e "\033[0;32m** Done with making daa-display! **\033[0m"
@@ -264,12 +264,16 @@ send:
 	fi
 
 ownship=N858MH
-solo=false
+maxlines=2000#optional, multiple output files are generates if the daa file exceeds maxlines. To prevent splitting, use maxlines=0
+solo=false#optional
+traffic-interpolation=false#optional
 convert-csv:
 	node dist/danti-utils/convert-csv2daa.js $(file) $(ownship) $(solo)
 
+# example:
+#	make fix-daa file=H1.daa ownship=N858MH maxlines=2000 traffic-interpolation=false solo=false
 fix-daa:
-	node dist/danti-utils/fix-daa.js $(file) $(ownship) $(solo)
+	node dist/danti-utils/fix-daa.js $(file) $(ownship) $(maxlines) $(solo) ${traffic-interpolation}
 
 audit:
 	-npm audit fix

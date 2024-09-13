@@ -57,6 +57,7 @@
 import { DaaAircraft, animateAircraft } from '../daa-displays/utils/daa-reader';
 import { computeBearing } from '../daa-displays/daa-utils';
 import * as fs from 'fs';
+import { exit } from 'node:process';
 
 // the max number of lines the .daa file should contain
 const MAX_DAA_LINES: number = 2000;
@@ -399,7 +400,8 @@ function adjustTime (ac_series: AcSeries): AcSeries {
 /**
  * Utility function, interpolates the data series so that data points are evenly spaced (1Hz)
  */
-function interpolateAcSeries (ac_series: AcSeries): AcSeries {
+function interpolateAcSeries (ac_series: AcSeries, ownship?: string, opt?: { trafficInterpolation?: boolean }): AcSeries {
+	opt = opt || {};
     const tail_numbers: string[] = ac_series ? Object.keys(ac_series) : [];
     if (!tail_numbers.includes(ownship)) {
         console.error(`[csv2daa] Ownship ${ownship} could not be found in the data series`);
@@ -410,32 +412,38 @@ function interpolateAcSeries (ac_series: AcSeries): AcSeries {
         // data frequency should be 1Hz -- fill the gaps in the data series if needed
         const name: string = tail_numbers[i];
         const ac_data: DaaAircraft[] = ac_series[name];
-        // console.log(`[csv2daa] Interpolating missing datapoints for ${name}...`);
-        // process each aircraft independently and save to full_ac_series, stay in the time range indicated for the ownship
-        const interpolated_data: DaaAircraft[] = [];
-        for (let i = 1; i < ac_data.length; i++) {
-            const deltaTime: number = +ac_data[i].time - +ac_data[i - 1].time;
-            // console.log({ deltaTime });
-            if (deltaTime === 0) {
-                if (interpolated_data.length === 0) {
-                    // insert most recent datapoint
-                    interpolated_data.push(ac_data[i]);
-                } else {
-                    // replace the last datapoint with the most recent
-                    interpolated_data[interpolated_data.length - 1] = ac_data[i];
-                }
-            } else if (deltaTime > 1) {
-                const animatedSeries: DaaAircraft[] = animateAircraft([ ac_data[i - 1], ac_data[i] ], deltaTime, { dbg_lines: false });
-                interpolated_data.push(...animatedSeries.slice(0, animatedSeries.length - 1));
-            } else {
-                interpolated_data.push(ac_data[i - 1]);
-            }
-            // add last data point
-            if (i === ac_data.length - 1) {
-                interpolated_data.push(ac_data[i]);
-            }
-        }
-        interpolated_ac_series[name] = interpolated_data;
+		// interpolate the ownship or interpolate all aircraft if opt.interpolateTraffic is true
+		if ((ownship && name === ownship || opt?.trafficInterpolation)) {
+			console.log(`[csv2daa] Interpolating missing datapoints for ${name}...`);
+			// process each aircraft independently and save to full_ac_series, stay in the time range indicated for the ownship
+			const interpolated_data: DaaAircraft[] = [];
+			for (let i = 1; i < ac_data.length; i++) {
+				const deltaTime: number = +ac_data[i].time - +ac_data[i - 1].time;
+				// console.log({ deltaTime });
+				if (deltaTime === 0) {
+					if (interpolated_data.length === 0) {
+						// insert most recent datapoint
+						interpolated_data.push(ac_data[i]);
+					} else {
+						// replace the last datapoint with the most recent
+						interpolated_data[interpolated_data.length - 1] = ac_data[i];
+					}
+				} else if (deltaTime > 1) {
+					const animatedSeries: DaaAircraft[] = animateAircraft([ ac_data[i - 1], ac_data[i] ], deltaTime, { dbg_lines: false });
+					interpolated_data.push(...animatedSeries.slice(0, animatedSeries.length - 1));
+				} else {
+					interpolated_data.push(ac_data[i - 1]);
+				}
+				// add last data point
+				if (i === ac_data.length - 1) {
+					interpolated_data.push(ac_data[i]);
+				}
+			}
+	        interpolated_ac_series[name] = interpolated_data;
+		} else {
+			// do not interpolate, leave data as it is
+			interpolated_ac_series[name] = ac_series[name];
+		}
     }
     return interpolated_ac_series;
 }
@@ -476,7 +484,7 @@ function getOutputFileName (fname: string, chunk: number, soloFlight: boolean): 
 /**
  * Utility function, fixes a daa file with gaps in the datapoints
  */
-export function fixDaa (fname: string, ownship: string, opt?: { soloFlight: boolean }): boolean {
+export function fixDaa (fname: string, ownship: string, opt?: { soloFlight?: boolean, trafficInterpolation?: boolean, maxlines?: number }): boolean {
     if (fname && ownship) {
         console.log(`[fixDaa] Processing ${fname} ...`);
         const data: string = fs.readFileSync(fname).toLocaleString() || "";
@@ -486,8 +494,9 @@ export function fixDaa (fname: string, ownship: string, opt?: { soloFlight: bool
             // process each aircraft independently and save to full_ac_series, stay in the time range indicated for the ownship
             const trkvs_ac_series: AcSeries = computeTrkVs(ac_series, ownship);
             const integer_ac_series: AcSeries = adjustTime(trkvs_ac_series);
-            const interpolated_ac_series: AcSeries = interpolateAcSeries(integer_ac_series);
+            const interpolated_ac_series: AcSeries = interpolateAcSeries(integer_ac_series, ownship, opt);
             const daa_data: DaaAircraft[] = acSeries2DaaData(interpolated_ac_series, ownship);
+			const maxlines: number = opt?.maxlines > 0 ? opt.maxlines : daa_data.length;
             // convert to .daa
             console.log("[fixDaa] Filling .daa gaps...");
             const daa_units: string = UNITS;		
@@ -502,7 +511,7 @@ export function fixDaa (fname: string, ownship: string, opt?: { soloFlight: bool
                 daaFileContent += "\n" + printAcSeriesLine(daa_data[i], labels);
                 lineCount++;
                 // each daa file should start with the ownship data
-                if (lineCount > MAX_DAA_LINES 
+                if (lineCount > maxlines 
                         && i + 1 < daa_data.length 
                         && daa_data[i + 1].name === ownship) {
                     fs.writeFileSync(daaFile, daaFileContent);
@@ -532,19 +541,28 @@ export function fixDaa (fname: string, ownship: string, opt?: { soloFlight: bool
 // utility function, prints information on how to use the converter
 export function help (): string {
     return `Usage:
-node fix-daa <file.daa> ownship=N858MH solo=false`;
+node fix-daa <file.daa> <ownship> <maxlines> <solo> <interpolateTraffic>
+
+Example:
+node fix-daa NYC.daa N858MH 2000 false false`;
 }
 
 // get args from command line
 const args: string[] = process.argv?.slice(2);
 console.log('args: ', args);
-const ownship: string = args?.length > 1 && args[1] ? args[1] : "N858MH";
-const soloFlight: boolean = args?.length > 2 && args[2] ? args[2] === "true" : false;
+if (args.length < 4) {
+	help();
+	exit(1);
+}
+const ownship: string = args[1];
+const maxlines: number = +args[2];
+const soloFlight: boolean = args[3] === "true";
+const trafficInterpolation: boolean = args[4] === "true"; // default is false
 // TODO: add command line options for the following functions:
 // - list ac names
 // - select ownship name (this will put constraints on the timestamp range)
 if (args?.length && args[0]) {
-    fixDaa(args[0], ownship, { soloFlight });
+	fixDaa(args[0], ownship, { soloFlight, trafficInterpolation, maxlines });
 } else {
-    console.log(help());
+	console.log(help());
 }
