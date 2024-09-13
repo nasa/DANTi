@@ -264,7 +264,7 @@ send:
 	fi
 
 ownship=N858MH
-maxlines=2000#optional, multiple output files are generates if the daa file exceeds maxlines. To prevent splitting, use maxlines=0
+maxlines=10000#optional, multiple output files are generates if the daa file exceeds maxlines. To prevent splitting, use maxlines=0
 solo=false#optional
 traffic-interpolation=false#optional
 convert-csv:
