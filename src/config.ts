@@ -40,6 +40,10 @@ export type ScreenType = "21:9" | "ultra-widescreen" | "16:9" | "widescreen" | "
 export const DANTI_ADDRESS: string = "127.0.0.1"; // default is localhost
 export const DANTI_PORT: number = 8082;
 
+// default DAA server address and port
+export const DAA_SERVER_ADDRESS: string = "127.0.0.1"; // default is localhost
+export const DAA_SERVER_PORT: number = 8083;
+
 // whether danti-app should use https to connect to the server (this is not necessary when using localhost)
 export const USE_HTTPS: boolean = false;
 

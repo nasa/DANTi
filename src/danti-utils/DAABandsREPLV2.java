@@ -27,10 +27,10 @@
  * UNILATERAL TERMINATION OF THIS AGREEMENT.
  */
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
+import java.net.Socket;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -66,7 +66,7 @@ class DaaStreamReader extends StateReader {
 
 	// whether dbg messages are printed
 	protected boolean dbg_enabled = true;
-
+	
 	// ownship name (if null, then the first traffic aircraft is considered the ownship
 	protected String ownshipName;
 	// ownship data
@@ -552,12 +552,14 @@ public class DAABandsREPLV2 extends DAABandsV2 {
 	static String[] cmd_ownship_name = { "ownship-name" }; // updates ownship name, e.g., N416DJ (default is "ownship")	
 	static String[] cmd_stale_threshold = { "stale", "stale-threshold" };
 	static String[] cmd_reset = { "reset" }; // clears aircraft info stored in memory
+	static String[] cmd_daa_server = { "daa-server" }; // sets the daa server address/port (default is localhost:9092)
 
 	// commands without parameters
 	static String[] cmd_quit = { "quit", "exit", "quit;", "exit;", "bye!" };
 	static String[] cmd_version = { "version", "version;" };
 	static String[] cmd_show_table = { "show-table", "show-table;" };
 	static String[] cmd_compute_bands = { "compute-bands", "compute-bands;", "bands", "bands;", "get-bands", "get-bands;" };
+	static String[] cmd_compute_lla = { "compute-lla", "compute-lla;", "lla", "lla;", "get-lla", "get-lla;" };
 
 	// ownship name
 	protected String ownshipName = "ownship";
@@ -592,27 +594,51 @@ public class DAABandsREPLV2 extends DAABandsV2 {
 	// stale threshold: entries older than (current_time - staleness_threshold) are not used in computations
 	protected double staleThreshold = 10;
 
+	// daa socket server address port, used to communicate bands to DANTi
+	protected String serverAddress = "localhost";
+	protected int serverPort = 8083;
+	protected Socket clientSocket = null;
+	protected PrintWriter socket_out = null;
+	
 	// daa data stream walker
 	protected DantiStreamWalker walker;
-
-	// file that will contain LLA data
-	protected String sfname;
-	// lla print writer
-	protected PrintWriter lla_printwriter;
 
 	/**
 	 * Constructor
 	 */
 	DAABandsREPLV2 () {
 		daaConfig = Paths.get(configFolder + "/" + daaConfigFile).toAbsolutePath().toString(); 
-		ifname = "<REPL>";
-		ofname = Paths.get(outputFolder + "/REPL.json").toAbsolutePath().toString();
+		// ifname = "<REPL>";
+		// ofname = Paths.get(outputFolder + "/REPL.json").toAbsolutePath().toString();
 		scenario = "<REPL>";
-		sfname = Paths.get(scenarioFolder + "/REPL-scenario.json").toAbsolutePath().toString();
+		// sfname = Paths.get(scenarioFolder + "/REPL-scenario.json").toAbsolutePath().toString();
 		// daaAlerter = "DWC_Phase_II"; // DWC Terminal 450ft x 1500ft 
 		// disabling printing metrics and polys will improve performance
 		PRINT_METRICS = false;
 		PRINT_POLYGONS = false;
+	}
+
+	/**
+	 * Utility function, activates the socket connection
+	 */
+	boolean connect () {
+		return connect(serverPort);
+	}
+	boolean connect (int port) {
+		try {
+			// create server
+			System.out.println("[DAABandsREPLV2] Creating socket connection with DAA Server on localhost:" + serverPort);
+			clientSocket = new Socket(serverAddress, serverPort);
+			// create output stream for sending data to danti-worker
+			System.out.println("[DAABandsREPLV2] Setting up output stream to DAA Server...");
+			socket_out = new PrintWriter(clientSocket.getOutputStream(), true);
+		} catch (IOException e) {
+			System.out.println("[DAABandsREPLV2] Socket connection error :/");
+			System.out.println(e);
+			return false;
+		}
+		System.out.println("[DAABandsREPLV2] Socket connection ready!");
+		return true;
 	}
 
 	/**
@@ -626,34 +652,44 @@ public class DAABandsREPLV2 extends DAABandsV2 {
 	}
 
 	/**
-	 * Utility functions for setting output folder, scenario folder, config folder
+	 * Utility functions for setting config folder
 	 */
-	void setOutputFolder (String folder) {
-		outputFolder = Paths.get(folder).toAbsolutePath().toString();
-		ofname = Paths.get(outputFolder + "REPL.json").toAbsolutePath().toString();
-		this.log("Setting output folder: " + outputFolder);
-	}
-	void setScenarioFolder (String folder) {
-		scenarioFolder = Paths.get(folder).toAbsolutePath().toString();
-		sfname = Paths.get(scenarioFolder + "REPL.json").toAbsolutePath().toString();
-		this.log("Setting scenario folder: " + scenarioFolder);
-	}
 	void setConfigFolder (String folder) {
 		configFolder = Paths.get(folder).toAbsolutePath().toString();
 		daaConfig = Paths.get(configFolder + "/" + daaConfigFile).toAbsolutePath().toString();
 		this.log("Setting config folder: " + configFolder);
 	}
+	/**
+	 * Utility functions for setting config file
+	 */
 	void setConfigFile (String file) {
 		daaConfigFile = file;
 		daaConfig = Paths.get(configFolder + "/" + daaConfigFile).toAbsolutePath().toString();
 		this.log("Setting config folder: " + configFolder);
 	}
+	/**
+	 * Utility functions for setting stale threshold for traffic
+	 */
 	boolean setStaleThreshold (double th) {
 		if (th >= 0) {
 			staleThreshold = th;
 			this.log("Setting stale threshold: " + staleThreshold);
 			return true;
 		}
+		return false;
+	}
+	/**
+	 * Utility functions for setting DAA server address and port
+	 */
+	boolean setServerAddressPort (String address_port) {
+		String[] info = address_port.split(":");
+		if (info != null && info.length > 1) {
+			serverAddress = info[0];
+			serverPort = Integer.parseInt(info[1]);
+			this.log("DAA Server: " + serverAddress + ":" + serverPort);
+			return true;
+		}
+		this.log("Warning: unable to set server address/port at " + address_port);
 		return false;
 	}
 
@@ -666,28 +702,26 @@ public class DAABandsREPLV2 extends DAABandsV2 {
 		this.log(" config folder: " + configFolder);
 		this.log(" config file: " + daaConfigFile);
 		if (daaAlerter != null ) { this.log(" selected alerter: " + daaAlerter); }
-		this.log(" output file: " + ofname);
-		this.log(" scenario file: " + sfname);
+		this.log(" DAA server: " + serverAddress + ":" + serverPort);
 		this.log("----------------");
 		this.log(printConfig());
 		this.log("----------------");
 	}
 
 	/**
-	 * Creates lla print writer
+	 * Returns true if the command line is a command
 	 */
-	boolean createLLAPrintWriter () {
-		try {
-			log("Creating lla file " + sfname);
-			lla_printwriter = new PrintWriter(new BufferedWriter(new FileWriter(sfname)), true);
-			log(" Done!");
-		} catch (Exception e) {
-			System.err.println("** Error: " + e);
-			return false;
+	protected boolean isCommand (String[] cmd, String line) {
+		if (line != null) {
+			String ln = line.trim();
+			for (int i = 0; i < cmd.length; i++) {
+				if (ln.startsWith(cmd[i] + " ")) {
+					return true;
+				}
+			}
 		}
-		return true;
+		return false;
 	}
-
 	/**
 	 * Returns true if the command line is a meta command
 	 */
@@ -718,20 +752,6 @@ public class DAABandsREPLV2 extends DAABandsV2 {
 			}
 		}
 		return -1;
-	}
-	/**
-	 * Returns true if the command line is a command
-	 */
-	protected boolean isCommand (String[] cmd, String line) {
-		if (line != null) {
-			String ln = line.trim();
-			for (int i = 0; i < cmd.length; i++) {
-				if (ln.startsWith(cmd[i] + " ")) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 	/**
 	 * Returns the arguments of the command
@@ -772,86 +792,132 @@ public class DAABandsREPLV2 extends DAABandsV2 {
 		walker = new DantiStreamWalker(toDAA(), staleThreshold);
 		// set ownship name
 		walker.setOwnshipName(ownshipName);
-		// // set stale threshold
-		// walker.setStaleThreshold(staleThreshold);
 		// walk data
-		boolean success = walkData(walker) && compute_lla(walker);
+		String bands = compute_bands(walker);
+		// log(bands);
+		boolean success = sendBands(bands);
+		// success &= compute_lla(walker);
+		log("Done! " + success);
+		return success;
+	}
+	/**
+	 * Computes LLA data
+	 */
+	boolean compute_lla () {
+		log("Computing LLA...");
+		// load config
+		if (!configLoaded) {
+			loadConfig();
+		}
+		// load wind
+		loadWind();
+		// create file walker
+		walker = new DantiStreamWalker(toDAA(), staleThreshold);
+		// set ownship name
+		walker.setOwnshipName(ownshipName);
+		String lla = compute_lla(walker);
+		boolean success = sendLLA(lla);
 		log("Done! " + success);
 		return success;
 	}
 
-	// TODO: split walkFile in DAABandsV2, so the logic for creating bands can be reused
-	public boolean walkData(DantiStreamWalker walker) {
-		// create output file
-		boolean success = createPrintWriter();
-		if (success) {
-			printWriter.println("{\n" + jsonHeader());
-
-			JsonBands jb = new JsonBands();
-			String jsonStats = null;
-
-			walker.readAllStates(daa);
-			if (daaAlerter != null) { loadSelectedAlerter(); }
-			jsonStats = jsonBands(jb);
-
-			printWriter.println(jsonStats + ",");
-
-			printArray(printWriter, jb.ownshipArray, "Ownship");
-			printWriter.println(",");
-			printArray(printWriter, jb.alertsArray, "Alerts");
-			printWriter.println(",");
-			printArray(printWriter, jb.metricsArray, "Metrics");
-			printWriter.println(",");
-			printArray(printWriter, jb.trkArray, "Heading Bands");
-			printWriter.println(",");
-			printArray(printWriter, jb.gsArray, "Horizontal Speed Bands");
-			printWriter.println(",");
-			printArray(printWriter, jb.vsArray, "Vertical Speed Bands");
-			printWriter.println(",");
-			printArray(printWriter, jb.altArray, "Altitude Bands");
-			printWriter.println(",");
-			printArray(printWriter, jb.resTrkArray, "Horizontal Direction Resolution");
-			printWriter.println(",");
-			printArray(printWriter, jb.resGsArray, "Horizontal Speed Resolution");
-			printWriter.println(",");
-			printArray(printWriter, jb.resVsArray, "Vertical Speed Resolution");
-			printWriter.println(",");
-			printArray(printWriter, jb.resAltArray, "Altitude Resolution");
-			printWriter.println(",");
-
-			printArray(printWriter, jb.contoursArray, "Contours");
-			printWriter.println(",");
-			printArray(printWriter, jb.hazardZonesArray, "Hazard Zones");
-			printWriter.println(",");
-
-			printWriter.println("\"Monitors\": ");
-			List<List<String>> info = new ArrayList<List<String>>();
-			info.add(jb.monitorM1Array);
-			info.add(jb.monitorM2Array);
-			info.add(jb.monitorM3Array);
-			info.add(jb.monitorM4Array);
-			printMonitors(printWriter, jb.monitors, info);
-
-			printWriter.println("}");
-
-			return closePrintWriter();
+	/**
+	 * Utility function, sends bands over the socket connection
+	 */
+	boolean sendBands (String bands) {
+		String msg = "{ \"type\": \"bands\", \"val\": " + bands + " }";
+		return send(msg);
+	}
+	/**
+	 * Utility function, sends lla data over the socket connection
+	 */
+	boolean sendLLA (String lla) {
+		String msg = "{ \"type\": \"lla\", \"val\": " + lla + " }";
+		return send(msg);
+	}
+	/**
+	 * Utility function, sends a string representation of JSON data over the socket connection
+	 */
+	boolean send (String jsonData) {
+		if (socket_out != null) {
+			socket_out.println(jsonData);
+			return true;
 		}
-		log("Error: unable to create output file");
 		return false;
+	}
+
+	/**
+	 * Utility function, prints a list in output as a JSON array.
+	 * This version returns a string encoding of the array
+	 */
+	public static String printArray(List<String> info, String label) {
+		String out = "\"" + label + "\": [\n";
+		boolean comma = false;
+		for (String str : info) {
+			if (comma) {
+				out += ",\n";
+			} else {
+				comma = true;
+			}
+			out += str + "\n";
+		}
+		out += "]";
+		return out;
+	}
+
+	/**
+	 * Utility function, computes the bands and returns them as a JSON string
+	 */
+	public String compute_bands (DantiStreamWalker walker) {
+		String out = "{\n" + jsonHeader() + "\n";
+
+		walker.readAllStates(daa);
+		if (daaAlerter != null) { loadSelectedAlerter(); }
+		JsonBands jb = new JsonBands();
+		String jsonStats = jsonBands(jb);
+		out += jsonStats + ",\n";
+
+		out += printArray(jb.ownshipArray, "Ownship");
+		out += ",\n";
+		out += printArray(jb.alertsArray, "Alerts");
+		out += ",\n";
+		out += printArray(jb.metricsArray, "Metrics");
+		out += ",\n";
+		out += printArray(jb.trkArray, "Heading Bands");
+		out += ",\n";
+		out += printArray(jb.gsArray, "Horizontal Speed Bands");
+		out += ",\n";
+		out += printArray(jb.vsArray, "Vertical Speed Bands");
+		out += ",\n";
+		out += printArray(jb.altArray, "Altitude Bands");
+		out += ",\n";
+		out += printArray(jb.resTrkArray, "Horizontal Direction Resolution");
+		out += ",\n";
+		out += printArray(jb.resGsArray, "Horizontal Speed Resolution");
+		out += ",";
+		out += printArray(jb.resVsArray, "Vertical Speed Resolution");
+		out += ",\n";
+		out += printArray(jb.resAltArray, "Altitude Resolution");
+		out += ",\n";
+
+		out += printArray(jb.contoursArray, "Contours");
+		out += ",\n";
+		out += printArray(jb.hazardZonesArray, "Hazard Zones");
+		out += ",\n";
+
+		out += "\"Monitors\": []\n";
+		out += "}";
+
+		return out;
 	}
 
 	/**
 	 * Computes LLA position
 	 */
-	protected boolean compute_lla (DantiStreamWalker walker) {
+	protected String compute_lla (DantiStreamWalker walker) {
 		log("Computing lla...");
-		// create output file
-		createLLAPrintWriter();
 		// re-use the logic of daa2json
 		DAA2Json daa2json = new DAA2Json(daa);
-
-		lla_printwriter.println("{\n\t\"scenarioName\": \"" + scenario + "\",");
-
 		String llaString = "\t\"lla\": {\n"; // position array, grouped by aircraft type
 		String daaString = "\t\"daa\": [\n"; // position array, as in the original daa file
 		String stepsString = "\t\"steps\": [ "; // time array
@@ -883,14 +949,13 @@ public class DAABandsREPLV2 extends DAABandsV2 {
 		llaString += "\n\t";
 		stepsString += "]";
 
-		lla_printwriter.println("\t\"length\": " + 1 + ", ");
-		lla_printwriter.println(daaString + "],");
-		lla_printwriter.println(llaString + "},");
-		lla_printwriter.println(stepsString);
-		lla_printwriter.println("}");
-
-		lla_printwriter.close();
-		return true;
+		String out = "{\n\t\"scenarioName\": \"" + scenario + "\",\n";
+		out += "\t\"length\": " + 1 + ", \n";
+		out += daaString + "],\n";
+		out += llaString + "},\n";
+		out += stepsString + "\n";
+		out += "}";
+		return out;
 	}
 	
 	/**
@@ -1022,6 +1087,25 @@ public class DAABandsREPLV2 extends DAABandsV2 {
 			// compute bands
 			return compute_bands();
 		}
+		if (isMetaCommand(cmd_compute_lla, line)) {
+			// compute bands
+			return compute_lla();
+		}
+		if (isCommand(cmd_daa_server, line)) {
+			// change daa server
+			String data = getArgs(cmd_traffic_data, line);
+			if (data != null) {
+				try {
+					int port = Integer.parseInt(data);
+					if (port != serverPort || clientSocket == null || socket_out == null) {
+						return connect(port);
+					}
+				} catch (NumberFormatException nfe) {
+					System.out.println(nfe);
+					return false;
+				}
+			}
+		}
 		log("Error: Unrecognized command '" + line + "'");
 		return false;
 	}
@@ -1091,6 +1175,8 @@ public class DAABandsREPLV2 extends DAABandsV2 {
 					if (a + 1 < args.length) { setConfigFile(args[++a]); }
 				} else if (isCliArg(cmd_config_folder, args[a])) {
 					if (a + 1 < args.length) { setConfigFolder(args[++a]); }
+				} else if (isCliArg(cmd_daa_server, args[a])) {
+					if (a + 1 < args.length) { setServerAddressPort(args[++a]); }
 				}
 			}
 		}
@@ -1106,6 +1192,7 @@ public class DAABandsREPLV2 extends DAABandsV2 {
 		log("  Creates a read-eval-print loop for computing daa bands");
 		log("REPL Commands:");
 		log("  version\n\tPrint DAIDALUS version");
+		log("  daa-server <port>\n\tSets the DAA Server Port (default: 9092)");
 		log("  configFolder <absolute-path-to-config-folder>\n\tSets the config folder");
 		log("  config <file.conf>\n\tSets the configuration file to be loaded <file.conf>");
 		log("  precision <n>\n\tSets the precision of output values");
@@ -1123,6 +1210,7 @@ public class DAABandsREPLV2 extends DAABandsV2 {
 		repl.parseCliArgs(args);
 		repl.loadConfig();
 		repl.printSettings();
+		repl.connect();
 		repl.start();
 		//repl.printHelpMsg();
 	}
