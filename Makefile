@@ -73,7 +73,7 @@ xplane:
 
 daa-displays:
 	@echo -e "\033[0;32m** Making daa-displays submodule **\033[0m"
-	# git submodule update --init --remote
+	git submodule update --init --remote
 	# @echo -e "\033[0;32m** Done with cloning daa-displays! **\033[0m"
 	@echo -e "\033[0;32m** Building daa-displays **\033[0m"
 	@cd $(submodules)/daa-displays && make -e daidalus-releases=v$(DAIDALUS_VERSION) -e only-danti=y
