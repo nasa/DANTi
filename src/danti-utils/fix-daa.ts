@@ -113,101 +113,7 @@ function printAcSeriesLine (data: DaaAircraft, labels: string[]): string {
 }
 
 export type AcSeries = { [ ac: string ]: DaaAircraft[] };
-/**
- * Utility function, converts structured plain text into json data
- */
-function dataset2acseries (data: string, opt: { soloFlight: boolean, removeGroundTraffic: boolean, ownship: string, fname: string }): AcSeries {
-    const lines: string[] = data?.trim()?.split("\n");
-    if (lines?.length > 1) {
-        // first line in the csv file contains labels+units
-        // get labels, keep track of where the time column is
-        let name_col: number = -1;
-        let time_col: number = -1;
-        let lat_col: number = -1;
-        let lon_col: number = -1;
-        let alt_col: number = -1;
-        let gs_col: number = -1;
-        let trk_col: number = -1;
-        let vs_col: number = -1;
-        lines[0].split(",").map((elem: string, index: number) => {
-            elem = elem.toLocaleLowerCase();
-            for (const i in csv_labels_map) {
-                if (elem.startsWith(i)) {
-                    if (i.startsWith("tail_number")) {
-                        name_col = index;
-                    } else if (i.startsWith("time")) {
-                        time_col = index;
-                    } else if (i.startsWith("lat")) {
-                        lat_col = index;
-                    } else if (i.startsWith("lon")) {
-                        lon_col = index;
-                    } else if (i.startsWith("altitude")) {
-                        alt_col = index;
-                    } else if (i.startsWith("ground_speed")) {
-                        gs_col = index;
-                    } else if (i.startsWith("track_angle")) {
-                        trk_col = index;
-                    } else if (i.startsWith("vertical_speed")) {
-                        vs_col = index;
-                    }
-                }
-            }
-            return "???";
-        });
-        // sanity check
-        if (time_col < 0 || lat_col < 0 || lon_col < 0 || gs_col < 0 || alt_col < 0) {
-            console.error(`[csv2daa] Error: unable to find ${
-                time_col < 0 ? "time" 
-                : gs_col < 0 ? "gs" 
-                : lat_col < 0 ? "lat" 
-                : lon_col < 0 ? "lon"
-                : "alt" 
-            } column, aborting.`);
-            return null;
-        }
-        const dataset: string[] = lines.slice(1);
-        // build ac_series containing structured data
-        console.log(`[csv2daa] Building ac_series (length=${dataset.length})`);
-        const ac_series: AcSeries = {};
-        const warnings: string[] = [];
-        for (let i = 0; i < dataset.length; i++) {
-            const name: string = dataset[i].split(",")[name_col];
-            let alt: string = dataset[i].split(",")[alt_col];
-            if (name.trim().length > 0 && (!opt?.soloFlight || name === opt?.ownship)) {
-                const lat: string = dataset[i].split(",")[lat_col];
-                const lon: string = dataset[i].split(",")[lon_col];
-                const gs: string = dataset[i].split(",")[gs_col];
-                const trk: string = trk_col >= 0 ? dataset[i].split(",")[trk_col] : "0";
-                const vs: string = vs_col >= 0 ? dataset[i].split(",")[vs_col] : "0";
-                if (name === opt?.ownship || !(opt?.removeGroundTraffic && alt === "ground")) {
-                    alt = get_alt(alt);
-                    const time: number = get_time(dataset[i].split(",")[time_col]);
-                    ac_series[name] = ac_series[name] || [];
-                    const daaAircraft: DaaAircraft = { name, time, lat, lon, alt, gs, vs, trk, roll: 0 };
-                    ac_series[name].push(daaAircraft);
-                }
-            } else {
-                if (alt !== "ground") {
-                    warnings.push(`[csv2daa] Warning: Aircraft name not specified in dataset line ${i}: ${dataset[i]}`);
-                }
-            }
-        }
-        // sort dataset of each aircraft by time
-        const tail_numbers: string[] = Object.keys(ac_series);
-        for (let i = 0; i < tail_numbers.length; i++) {
-            const name: string = tail_numbers[i];
-            ac_series[name] = ac_series[name].sort((a, b: DaaAircraft) => {
-                return +a.time - +b.time;
-            });
-        }
-        // write errors if any
-        if (opt?.fname && warnings.length) {
-            fs.writeFileSync(`${opt?.fname}.err`, warnings.join("\n"));
-        }
-        return ac_series;
-    }
-    return null;
-}
+
 /**
  * Utility function, prints the header lines of the daa file (labels+units)
  */
@@ -232,7 +138,7 @@ function printUnits (data: string, col: {
  */
 function daa2acseries (data: string, opt: { soloFlight: boolean, removeGroundTraffic: boolean, ownship: string, fname: string }): AcSeries {
     const lines: string[] = data?.trim()?.split("\n");
-    if (lines?.length > 1) {
+    if (lines?.length > 2) {
         // first line in the daa file contains labels
 		// second line contains units
         // get labels, keep track of where the time column is
@@ -269,7 +175,7 @@ function daa2acseries (data: string, opt: { soloFlight: boolean, removeGroundTra
             } column, aborting.`);
             return null;
         }
-        const dataset: string[] = lines.slice(1);
+        const dataset: string[] = lines.slice(2); // the first two lines are header lines
         // build ac_series containing structured data
         console.log(`[daa2acseries] Building ac_series (length=${dataset.length})`);
         const ac_series: AcSeries = {};
@@ -318,7 +224,7 @@ function daa2acseries (data: string, opt: { soloFlight: boolean, removeGroundTra
 }
 
 /**
- * Utility function, computes trk and vs for the ac series
+ * Utility function, computes trk and vs for the ac series and keeps only traffic data relevant for the ownship timestamps
  */
 function computeTrkVs (ac_series: AcSeries, ownship: string): AcSeries {
     const tail_numbers: string[] = ac_series ? Object.keys(ac_series) : [];
@@ -359,7 +265,7 @@ function computeTrkVs (ac_series: AcSeries, ownship: string): AcSeries {
                     ...d0, vs, trk//, time: Math.round(+time_0)
                 });
                 // add final data point
-                if (i === ac_data.length - 1) {
+                if (i === ac_data.length - 1 && +time_1 >= min_time && +time_1 <= max_time) {
                     extended_ac_series.push({
                         ...d1, vs, trk//, time: Math.round(+time_1)
                     });
@@ -489,14 +395,16 @@ export function fixDaa (fname: string, ownship: string, opt?: { soloFlight?: boo
         console.log(`[fixDaa] Processing ${fname} ...`);
         const data: string = fs.readFileSync(fname).toLocaleString() || "";
         if (data) {
+			// remove lines commented with #
+			const clean_data: string = data.replace(/^\s*#.*/g, "");
             // get ac series
-            const ac_series: AcSeries = daa2acseries(data, { removeGroundTraffic: true, soloFlight, ownship, fname });
+            const ac_series: AcSeries = daa2acseries(clean_data, { removeGroundTraffic: true, soloFlight, ownship, fname });
             // process each aircraft independently and save to full_ac_series, stay in the time range indicated for the ownship
             const trkvs_ac_series: AcSeries = computeTrkVs(ac_series, ownship);
             const integer_ac_series: AcSeries = adjustTime(trkvs_ac_series);
             const interpolated_ac_series: AcSeries = interpolateAcSeries(integer_ac_series, ownship, opt);
             const daa_data: DaaAircraft[] = acSeries2DaaData(interpolated_ac_series, ownship);
-			const maxlines: number = opt?.maxlines > 0 ? opt.maxlines : daa_data.length;
+			const maxlines: number = opt?.maxlines > 0 ? opt.maxlines : 0;
             // convert to .daa
             console.log("[fixDaa] Filling .daa gaps...");
             const daa_units: string = UNITS;		
@@ -511,7 +419,7 @@ export function fixDaa (fname: string, ownship: string, opt?: { soloFlight?: boo
                 daaFileContent += "\n" + printAcSeriesLine(daa_data[i], labels);
                 lineCount++;
                 // each daa file should start with the ownship data
-                if (lineCount > maxlines 
+                if (maxlines > 0 && lineCount > maxlines 
                         && i + 1 < daa_data.length 
                         && daa_data[i + 1].name === ownship) {
                     fs.writeFileSync(daaFile, daaFileContent);
