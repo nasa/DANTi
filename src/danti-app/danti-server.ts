@@ -39,14 +39,13 @@ import {
 	SetFlightPlanRequest, OwnshipDataRequest, AvionicsData, AvionicsDataRequest, StaleThresholdRequest 
 } from './danti-interface';
 import { DantiData } from './danti-display';
-// import * as fs from 'fs';
-import { DantiWorker } from './danti-worker';
 import * as fsUtils from '../daa-server/utils/fsUtils';
-import { DAAScenario, FlightData, ScenarioDataPoint, ScenarioDescriptor } from '../daa-server/utils/daa-types';
+import { DaaBands, FlightData } from '../daa-server/utils/daa-types';
 import { FlightPlan } from '../daa-displays/daa-utils';
 import { DANTI_ADDRESS, DANTI_PORT, ENABLE_PROFILER, TERMINATE_ON_DISCONNECT, USE_PROXIMITY_FILTER, VERBOSE_DBG } from '../config';
 import { exit } from 'process';
 import { nearby } from './danti-filters';
+import { DantiWorker } from './danti-worker';
 
 /**
  * Server backend for danti-app
@@ -195,49 +194,6 @@ export class DantiServer {
 		await this.worker.configFolder(config_folder);
 		this.log("[danti-server] Done! ", success);
 		return success;
-	}
-	/**
-	 * Gets scenario datapoint
-	 */
-	getFirstDataPoint (scenario: ScenarioDescriptor): ScenarioDataPoint {
-		const res: ScenarioDataPoint = {
-			Wind: { deg: "0", knot: "0" },
-			Ownship: null,
-			Alerts: null,
-			"Altitude Bands": null,
-			"Heading Bands": null,
-			"Horizontal Speed Bands": null,
-			"Vertical Speed Bands": null,
-			"Altitude Resolution": null,
-			"Horizontal Direction Resolution": null,
-			"Horizontal Speed Resolution": null,
-			"Vertical Speed Resolution": null,
-			"Contours": null,
-			"Hazard Zones": null,
-			Monitors: null,
-			Metrics: null,
-			WindVectors: null
-		};
-		if (scenario) {
-			for (const key in res) {
-				switch (key) {
-					case "Monitors": {
-						// res[key] = scenario[key];
-						break;
-					}
-					case "Wind": {
-						res[key] = scenario[key];
-						break
-					}
-					default: {
-						if (scenario[key]?.length) {
-							res[key] = scenario[key][0];
-						}
-					}
-				}
-			}
-		}
-		return res;
 	}
 	/**
 	 * Handles messages received on the websocket connection.
@@ -413,19 +369,29 @@ export class DantiServer {
 							// send compute-bands request to worker
 							// profile data
 							const startTime_worker: number = Date.now();
-							const data: { bands: string, lla: string } = await this.worker.computeBands();
+							// compute bands
+							const bands: DaaBands = await new Promise ((resolve) => {
+								this.worker.computeBands((bands: DaaBands) => {
+									resolve(bands);
+								});
+							});
+							// compute lla (lat lon alt) data
+							const lla: FlightData = await new Promise ((resolve) => {
+								this.worker.computeLLA((lla: FlightData) => {
+									resolve(lla);
+								});
+							});
+							// get the latest avionics data
+							const avionics: AvionicsData = this.avionics;
+							// send data to the danti front-end
+							console.log("** bands and flight data ready **", { bands, lla });
 							const endTime_worker: number = Date.now();
-							if (data) {
+							if (bands) {
 								try {
 									const startTime_decodeResults: number = Date.now();
-									const desc: ScenarioDescriptor = JSON.parse(data.bands);
-									const bands: ScenarioDataPoint = this.getFirstDataPoint(desc);
-									const scenario: DAAScenario = JSON.parse(data.lla);
-									const avionics: AvionicsData = this.avionics;
-									const flightData: FlightData = scenario.lla[scenario.steps[0]];
 									this.dantiData = {
 										avionics,
-										flightData,
+										flightData: lla,
 										bands
 									};
 									const endTime_decodeResults: number = Date.now();

@@ -30,9 +30,13 @@
 import { ChildProcess, spawn } from "child_process";
 import path = require("path");
 import { DantiWorkerInterface } from "./danti-interface";
-import * as fsUtils from '../daa-server/utils/fsUtils';
-import * as os from 'os';
-import { DANTI_CONFIG } from "../config";
+import { DAA_SERVER_ADDRESS, DAA_SERVER_PORT, DANTI_CONFIG } from "../config";
+import * as dgram from 'node:dgram';
+import * as net from 'net';
+import { DaaBands, DAAScenario, FlightData, ScenarioDataPoint, ScenarioDescriptor } from "../daa-server/utils/daa-types";
+
+// ANY network address
+const ADDR_ANY: string = "0.0.0.0";
 
 /**
  * Process worker for computing daa bands
@@ -66,21 +70,45 @@ export class DantiWorker implements DantiWorkerInterface {
      * debug flag, when true the worker prints debug messages
      */
     protected dgb: boolean = false;
-    
+    /**
+     * Socket connection (TCP or UDP) for receiving data from the daa bands server
+     */
+    protected server: {
+        udp: dgram.Socket,
+        tcp: net.Server
+    } = {
+        udp: null,
+        tcp: null
+    };
+    // TCP/IP server address and port
+    protected tcpServerAddress: string = ADDR_ANY;
+    protected tcpServerPort: number = DAA_SERVER_PORT;
+
+	// callback functions
+	protected computeBandsCB: (bands: DaaBands) => void;
+	protected getFlightDataCB: (flightData: FlightData) => void;
+
     /**
      * Activates the worker
      */
-    activate (opt?: { verbose?: boolean }): Promise<boolean> {
+    async activate (opt?: { verbose?: boolean }): Promise<boolean> {
         this.dgb = !!opt?.verbose;
+		// create daa server that will be used by the bands worker to send data
+		await this.createSocketServer();
+		// create bands worker
         return new Promise ((resolve) => {
             this.log("[danti-worker] Booting up bands worker...");
             const dir: string = path.join(__dirname, "../danti-utils"); // folder containing DAABandsREPLV2
             const dantiConfig: string = DANTI_CONFIG || "DANTi_SL3.conf";
             const replOptions: string[] = [ "config", dantiConfig ];
+			const daaServerAddrPort: string = `${DAA_SERVER_ADDRESS}:${DAA_SERVER_PORT}`;
+			const daaServerOptions: string[] = ["daa-server", daaServerAddrPort]
             const args: string[] = [
                 "-jar", path.join(dir, "DAABandsREPLV2.jar")
-            ].concat(replOptions);
+            ].concat(replOptions). concat(daaServerOptions);
             this.log(`[danti-worker] java ${args.join(" ")}`);
+
+			// create bands worker
             this.worker = spawn("java", args);
             this.worker.stdout.setEncoding("utf8");
             this.worker.stderr.setEncoding("utf8");
@@ -118,6 +146,130 @@ export class DantiWorker implements DantiWorkerInterface {
             });
         });
 	}
+	/**
+	 * Utility function, gets the bands data from a scenario descriptor
+	 */
+	/**
+	 * Gets scenario datapoint
+	 */
+	getFirstDataPoint (scenario: ScenarioDescriptor): ScenarioDataPoint {
+		const res: ScenarioDataPoint = {
+			Wind: { deg: "0", knot: "0" },
+			Ownship: null,
+			Alerts: null,
+			"Altitude Bands": null,
+			"Heading Bands": null,
+			"Horizontal Speed Bands": null,
+			"Vertical Speed Bands": null,
+			"Altitude Resolution": null,
+			"Horizontal Direction Resolution": null,
+			"Horizontal Speed Resolution": null,
+			"Vertical Speed Resolution": null,
+			"Contours": null,
+			"Hazard Zones": null,
+			Monitors: null,
+			Metrics: null,
+			WindVectors: null
+		};
+		if (scenario) {
+			for (const key in res) {
+				switch (key) {
+					case "Monitors": {
+						// res[key] = scenario[key];
+						break;
+					}
+					case "Wind": {
+						res[key] = scenario[key];
+						break
+					}
+					default: {
+						if (scenario[key]?.length) {
+							res[key] = scenario[key][0];
+						}
+					}
+				}
+			}
+		}
+		return res;
+	}
+    /**
+     * Creates socket connections to receive data from the socket
+     */
+    async createSocketServer (): Promise<boolean> {
+        console.log("[danti-worker] Creating socket server...");
+        // TCP
+        this.server.tcp = net.createServer((socket: net.Socket) => {
+            socket.on('error', (err: Error) => {
+                console.error(`[danti-worker] TCP Server error:\n${err.stack}`);
+                this.server.tcp.close();
+            });
+            socket.on('data', async (buf: Buffer) => {
+				const DELIMITER: string = "¶";
+				// process received data
+				const dataString: string = buf.toLocaleString();
+				// console.log("[danti-worker] ** Received socket message **", { dataString });
+				try {
+					// Data needs to be split because the TCP/IP protocol may concatenate multiple data to optimize throughput (see data coalescing)
+					// Data is in JSON format { ... }, so concatenated data is in the form { .. }{ .. }{ .. } ... 
+					// A delimiter is introduced in all '}{' pairs to ease the detection and split of concatenated data
+					const dataElements: string[] = dataString?.replace(/}\s*{/g, `}${DELIMITER}{`).split(`${DELIMITER}`) || [];
+					for (let i = 0; i < dataElements.length; i++) {
+						const data = JSON.parse(dataElements[i]) || {};
+						switch (data?.type) {
+							case "bands": {
+								// console.dir({ socketMessage: bands }, { depth: null });
+								const desc: ScenarioDescriptor = data.val;
+								const bands: DaaBands = this.getFirstDataPoint(desc);
+								this.computeBandsCB(bands);
+								break;
+							}
+							case "lla": {
+								// console.dir({ socketMessage: bands }, { depth: null });
+								const scenario: DAAScenario = data.val;
+								const flightData: FlightData = scenario?.lla[scenario.steps[0]];
+								this.getFlightDataCB(flightData);
+							}
+						}
+					}
+				} catch (err) {
+					console.warn("[danti-worker] ** Warning: malformed JSON message", dataString, err);
+				}
+                // if (this.dmpFile) {
+                // 	console.log(`Saving message to file ${this.dmpFile}...`);
+                // 	fs.appendFileSync(this.dmpFile, msg + "\n\n", { encoding: 'binary' });
+                // }
+            });
+            socket.on('connect', () => {
+                const address: net.AddressInfo = <net.AddressInfo> socket.address();
+                console.log(`[danti-worker] TCP/IP Connection established at ${address?.address}:${address?.port}`);
+            });
+            socket.on('close', () => {
+                console.log(`[danti-worker] TCP/IP Closed by client`);
+            });
+        });
+        this.server.tcp.listen(this.tcpServerPort, this.tcpServerAddress);
+        console.log(`[connect-socket] TCP/IP Server ready at ${this.tcpServerAddress}:${this.tcpServerPort}`);
+        // // UDP -- TODO
+        // server.udp = dgram.createSocket('udp4');
+        // server.udp.on('error', (err) => {
+        //     console.error(`[connect-socket] UDP Server error:\n${err.stack}`);
+        //     server.udp.close();
+        // });
+        // server.udp.on('message', (msg, rinfo) => {
+        //     console.log(`[connect-socket] UDP Server received message: ${msg} from ${rinfo.address}:${rinfo.port}`);
+        //     // if (this.dmpFile) {
+        //     // 	console.log(`Saving message to file ${this.dmpFile}...`);
+        //     // 	fs.appendFileSync(this.dmpFile, msg + "\n\n", { encoding: 'binary' });
+        //     // }
+        // });
+        // server.udp.on('listening', () => {
+        //     const address = server.udp.address();
+        //     console.log(`[connect-socket] UDP Server listening at ${address.address}:${address.port}`);
+        // });
+        // server.udp.bind(UDP_PORT);
+        console.log("[connect-socket] Done with creating sockets!");
+        return true;
+    }
     /**
      * Sends a command to bands worker
      */
@@ -201,16 +353,32 @@ export class DantiWorker implements DantiWorkerInterface {
     /**
      * Sends compute-bands request to the worker
      */
-    async computeBands(): Promise<{ bands: string, lla: string }> {
-        await this.sendText("compute-bands");
-        const tmpDir: string = os.tmpdir();
-        const bandsFile: string = path.join(tmpDir, "REPL.json");
-        const bands: string = await fsUtils.readFile(bandsFile);
-        const llaFile: string = path.join(tmpDir, "REPL-scenario.json");
-        const lla: string = await fsUtils.readFile(llaFile);
-        return { bands, lla };
+    async computeBands(cb: (bands: DaaBands) => void): Promise<boolean> {
+		this.computeBandsCB = cb;
+		await this.sendText("compute-bands");
+		return true;
+		// const tmpDir: string = os.tmpdir();
+        // const bandsFile: string = path.join(tmpDir, "REPL.json");
+        // const fileBands: string = await fsUtils.readFile(bandsFile);
+        // const llaFile: string = path.join(tmpDir, "REPL-scenario.json");
+        // const lla: string = await fsUtils.readFile(llaFile);
+
+		// return new Promise((resolve) => {
+		// 	this.worker.on(DantiWorkerEvents.DidComputeBands, (evt: DidComputeBands) => {
+		// 		resolve({ fileBands, bands: evt.bands, lla });
+		// 	});
+		// })
+        // return { bands, lla };
     }
     /**
+     * Sends compute-lla request to the worker
+     */
+    async computeLLA(cb: (lla: FlightData) => void): Promise<boolean> {
+		this.getFlightDataCB = cb;
+		await this.sendText("compute-lla");
+		return true;
+	}
+	/**
      * Utility functions for logging data
      */
     protected log (data: string): void {

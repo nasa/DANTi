@@ -36,8 +36,8 @@ import { WindIndicator } from '../daa-displays/daa-wind-indicator';
 import { ViewOptions } from '../daa-displays/daa-view-options';
 
 import { DEFAULT_MAP_WIDTH, InteractiveMap, MAP_WIDESCREEN_WIDTH } from '../daa-displays/daa-interactive-map';
-import { LLAData, ScenarioDataPoint, LatLonAlt, DAA_AircraftDescriptor, AlertLevel } from '../daa-displays/utils/daa-types';
-import { Bands, downgrade_alerts, inhibit_bands, inhibit_resolutions } from '../daa-displays/daa-utils';
+import { LLAData, ScenarioDataPoint, LatLonAlt, DAA_AircraftDescriptor, AlertRegion } from '../daa-displays/utils/daa-types';
+import { Bands, downgrade_alerts, inhibit_bands, inhibit_resolutions, severity } from '../daa-displays/daa-utils';
 import * as utils from '../daa-displays/daa-utils';
 import { DaaVoice, Guidance, GuidanceKind } from '../daa-displays/daa-voice';
 
@@ -346,19 +346,19 @@ export class DantiDisplay {
                 // flag indicating whether we are mimicking TCAS suppression of warning alerts below a certain altitude
                 const force_caution: boolean = alt < THRESHOLD_ALT_SL3 && USE_TCAS_SL3;
                 if (force_caution) {
-                    downgrade_alerts({ to: AlertLevel.AVOID, alerts: bands?.Alerts?.alerts });
+                    downgrade_alerts({ to: "MID", alerts: bands?.Alerts?.alerts });
                     inhibit_bands({ bands });
                     inhibit_resolutions({ bands });
                 }
                 // compute max alert and collect aircraft alert descriptors
                 let max_alert: number = 0;
                 const traffic: DAA_AircraftDescriptor[] = flightData.traffic.map((data, index) => {
-                    const alert_level: number = bands.Alerts.alerts[index].alert_level;
+                    const alert_level: number = severity(bands.Alerts.alerts[index].alert_region);
                     const desc: DAA_AircraftDescriptor = {
                         callSign: data.id,
                         s: data.s,
                         v: data.v,
-                        symbol: daaSymbols[alert_level]
+                        symbol: alert_level >= 0 ? daaSymbols[alert_level] : daaSymbols[0]
                     };
                     if (alert_level > max_alert) {
                         max_alert = alert_level;
@@ -371,7 +371,7 @@ export class DantiDisplay {
                     const compassBands: Bands = utils.bandElement2Bands(bands["Heading Bands"]);
                     danti.compass?.setBands(compassBands);
                     const airspeedBands: Bands = utils.bandElement2Bands(bands["Horizontal Speed Bands"]);
-                    danti.airspeedTape?.setBands(airspeedBands, AirspeedTape.units.knots);
+                    danti.airspeedTape?.setBands(airspeedBands);
                     // DANTi should display either vspeed bands or altitude bands, not both of them -- we choose to show vspeed bands
                     const vspeedBands: Bands = utils.bandElement2Bands(bands["Vertical Speed Bands"]);
                     danti.verticalSpeedTape?.setBands(vspeedBands);
