@@ -109,7 +109,11 @@ export class XPlaneConnection {
                 : await worker.exec(`${__dirname}/dist/XPlaneConnection.jar`);
         this.clock++;
         // console.log(`[xplane-connect] Received xplane data: `, ans);
-        return ans ? JSON.parse(ans) : {};
+		try {
+	    	return ans ? JSON.parse(ans) : null;
+		} catch (err) {
+			return null;
+		}
     }
     /**
      * prints aircraft data in the daa format.
