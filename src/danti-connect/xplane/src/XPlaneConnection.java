@@ -425,17 +425,12 @@ public class XPlaneConnection {
      */
     String getAirspeed (int ac) {
         if (ac == 0) {
-            log("groundspeed"); // use this during live simulations
-            String dref_gs = "sim/flightmodel/position/groundspeed";//"sim/flightmodel/position/indicated_airspeed";
+			log("indicated_airspeed");
+			String dref_indicated_airspeed = "sim/flightmodel/position/indicated_airspeed";
             try {
                 // get values from xplane
-                float[] msec = xpc.getDREF(dref_gs);
-                if (msec[0] < MIN_AIRSPEED) {
-                    log("indicated_airspeed"); // use this when the physics engine is disabled (e.g., during feedback)
-                    String dref_indicated_airspeed = "sim/flightmodel/position/indicated_airspeed";
-                    msec = xpc.getDREF(dref_indicated_airspeed);
-                }
-                return String.valueOf(XPlaneConnection.msec2knots(msec[0]));
+                float[] kn = xpc.getDREF(dref_indicated_airspeed);
+                return String.valueOf(kn[0]);
             } catch (IOException ex) {
                 System.out.println("{ \"error\": \"" + ex.getMessage() + "\" }");
             }

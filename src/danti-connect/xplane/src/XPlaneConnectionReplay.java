@@ -103,8 +103,8 @@ public class XPlaneConnectionReplay extends XPlaneConnection {
             String dref = "sim/flightmodel/position/indicated_airspeed";
             try {
                 // get values from xplane
-                float[] msec = xpc.getDREF(dref);
-                return String.valueOf(XPlaneConnection.msec2knots(msec[0]));
+                float[] kn = xpc.getDREF(dref);
+                return String.valueOf(kn[0]);
             } catch (IOException ex) {
                 System.out.println("{ \"error\": \"" + ex.getMessage() + "\" }");
             }
