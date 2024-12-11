@@ -8,7 +8,8 @@
 		"sourceMap": false,
 		"baseUrl": ".",
 		"paths": {
-			"*": [ "node_modules/*", "node_modules/@types/*" ] // This mapping is relative to "baseUrl"
+			"*": [ "node_modules/*", "node_modules/@types/*" ], // This mapping is relative to "baseUrl"
+			"undici-types": [ "node_modules/undici-types/index.d.ts"] // this creates an alias for undici-types, it's needed to fix compilation issues with undici-types when module is "UMD"
 		},
 		"types": [
 			"handlebars", "jquery", "node", "express", "ws", "electron"
