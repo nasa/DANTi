@@ -386,6 +386,11 @@ export class SocketConnection extends XPlaneConnection {
      */
     connectToSocket (): boolean {
         console.log("[connect-socket] Creating sockets...");
+		// dataString is used as a receive buffer
+		let dataString: string = "";
+		// threshold for displaying warning messages when parsing of received messages fails
+		const WARNING_THRESHOLD: number = 100;
+		let warning_counter: number = 0;
         // TCP
         this.server.tcp = net.createServer((socket: net.Socket) => {
             socket.on('error', (err: Error) => {
@@ -394,12 +399,18 @@ export class SocketConnection extends XPlaneConnection {
             });
             socket.on('data', async (buf: Buffer) => {
 				const DELIMITER: string = "¶";
-				// process received data
-				const dataString: string = buf.toLocaleString();
+				// process received data. Data is concatenated to the previous buffer, to take into account cases where large data is received with multiple packets
+				dataString += buf.toLocaleString();
 				try {
-					// Data needs to be split because the TCP/IP protocol may concatenate multiple data to optimize throughput (see data coalescing)
+					// IMPORTANT NOTES 
+					// - Received data may need to be split because the TCP/IP protocol may concatenate multiple data to optimize throughput (see data coalescing)
+					// - Received data may need to be re-assembled because the TCP/IP protocol may split large data and deliver it using multiple consecutive packets
+					// For data splitting:
 					// Data is in JSON format { ... }, so concatenated data is in the form { .. }{ .. }{ .. } ... 
-					// A delimiter is introduced in all '}{' pairs to ease the detection and split of concatenated data
+					// A delimiter is introduced in all '}{' pairs to ease detection and spliting of concatenated data
+					// For data concatenation:
+					// The only safe way to understand if all data has been received is to try to parse the state.
+					// If a parsing error is detected, then try to concatenate data
 					const dataElements: string[] = dataString?.replace(/}\s*{/g, `}${DELIMITER}{`).split(`${DELIMITER}`) || [];
 					for (let i = 0; i < dataElements.length; i++) {
 						let msg: SocketMsg = JSON.parse(dataElements[i]) || {};
@@ -433,8 +444,18 @@ export class SocketConnection extends XPlaneConnection {
 							console.log(`[connect-socket] Skipping message (ownship=${this.ownshipName}, danti=${this.dantiId})`, msg);
 						}
 					}
+					// if no error occurred, we can reset the receive buffer
+					dataString = "";
+					// reset warning counter
+					warning_counter = 0;
 				} catch (err) {
-					console.warn("[connect-socket] ** Warning: malformed JSON message", dataString, err);
+					if (++warning_counter > WARNING_THRESHOLD) {
+						console.warn("[connect-socket] ** Warning: malformed JSON message. Resetting receive buffer.", dataString, err);
+						// reset receive buffer to avoid unlimited grouth
+						dataString = "";
+					} else {
+						console.warn("[connect-socket] ** Warning: truncated JSON message, trying to concatenate additional data", { warning_counter, WARNING_THRESHOLD });
+					}
 				}
                 // if (this.dmpFile) {
                 // 	console.log(`Saving message to file ${this.dmpFile}...`);
