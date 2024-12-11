@@ -34,7 +34,8 @@
 		"convert": "node dist/danti-utils/convert-dantilog2daa.js",
 		"dist": "electron-builder",
 		"daa-displays": "cd submodules/daa-displays && npm start",
-		"convert-csv2daa": "node dist/danti-utils/convert-csv2daa.js"
+		"convert-csv2daa": "node dist/danti-utils/convert-csv2daa.js",
+		"arm": "arch -x86_64 zsh"
 	},
 	"dependencies": {
 		"animate.css": "^4.1.1",

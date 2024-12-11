@@ -152,7 +152,7 @@ dist: tsc-nocopy
 	@touch dist/daa-output/REPL.json
 	@touch dist/daa-scenarios/REPL-scenario.json
 	make daa-displays
-	cp package-dist.json dist/package.json && cp package-lock.json dist/
+	cp package-dist.json dist/package.json # && cp package-lock.json dist/
 	rm dist/leaflet.js && cp node_modules/leaflet/dist/leaflet.js dist/
 	@if [ ! -e "dist/danti-utils/lib/$(DAIDALUS_JAR)" ]; then \
 		cp dist/daa-logic/$(DAIDALUS_JAR) dist/danti-utils/lib/; \
